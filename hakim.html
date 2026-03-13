@@ -1,90 +1,104 @@
-<style>
-    .btn-jana { background: #e67e22; color: white; margin-bottom: 10px; width: 100%; }
-    .lorong-col { font-weight: bold; color: #d35400; text-align: center; }
-</style>
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <title>Borang Hakim SMKTD2</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f0f2f5; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 8px; }
+        .no-print { margin-bottom: 20px; text-align: center; }
+        .btn-event { padding: 10px; margin: 5px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #333; padding: 8px; text-align: left; }
+        .print-only { display: none; }
+        @media print {
+            .no-print { display: none; }
+            .print-only { display: block; }
+            body { background: white; padding: 0; }
+        }
+    </style>
+</head>
+<body>
 
-<table>
-    <thead>
-        <tr>
-            <th width="5%">No</th>
-            <th width="10%">Lorong</th>
-            <th width="12%">No Badan</th>
-            <th>Nama Murid</th>
-            <th width="10%">Kelas</th>
-            <th class="print-col" width="15%">Masa/Jarak</th>
-            <th class="print-col" width="10%">Kedudukan</th>
-        </tr>
-    </thead>
-    <tbody id="atletRows"></tbody>
-</table>
+<div class="container">
+    <div class="no-print">
+        <h2>Panel Borang Hakim</h2>
+        <div id="eventButtons"></div>
+        <p id="status">Memuatkan data...</p>
+    </div>
+
+    <div class="print-only" style="text-align:center;">
+        <h3>BORANG KEPUTUSAN ACARA: <span id="eventTitle"></span></h3>
+        <p>SMK TAMAN DESA 2 - KEJOHANAN SUKAN TAHUNAN 2026</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th width="5%">No</th>
+                <th width="10%">Lorong</th>
+                <th width="15%">No Badan</th>
+                <th>Nama Murid</th>
+                <th class="print-only" width="15%">Masa/Jarak</th>
+                <th class="print-col" width="10%">Kedudukan</th>
+            </tr>
+        </thead>
+        <tbody id="atletRows"></tbody>
+    </table>
+
+    <button class="no-print" onclick="window.print()" style="width:100%; padding:15px; margin-top:20px; background:#2c3e50; color:white; font-weight:bold;">CETAK BORANG</button>
+</div>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbwEBmbvGDCalb1iY-w4uWXs1zcw5ucgWB5OsadCVxK-JgAGWGl0HFOOQz5B18zPrDiq/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycby9-dyvjhucRzM3nT0XhcRMcaUCobIh9PEzAWaLTu3k2bhenc8iscT9RDTKpzH_D9Uy/exec';
     let dataAtlet = [];
     let dataLorong = [];
+    const acaraList = ["70m", "100m", "400m", "4x100m", "4x400m", "Tarik Tali", "Lompat Jauh", "Lontar Peluru", "Lompat Tinggi"];
 
-    function fetchAtlet() {
+    const btnArea = document.getElementById('eventButtons');
+    acaraList.forEach(a => {
+        btnArea.innerHTML += `<button class="btn-event" onclick="generate('${a}')">${a}</button>`;
+    });
+
+    function fetchData() {
         fetch(scriptURL).then(res => res.json()).then(res => {
-            dataAtlet = res.atlet; // Dari tab Pendaftaran
-            dataLorong = res.lorong; // Dari tab Acara
+            dataAtlet = res.atlet;
+            dataLorong = res.lorong;
             document.getElementById('status').innerText = 'Data Sedia.';
         });
     }
 
-    function generateBorang(namaAcara) {
-        document.getElementById('eventTitle').innerText = namaAcara.toUpperCase();
+    function generate(acara) {
+        document.getElementById('eventTitle').innerText = acara.toUpperCase();
         
-        // 1. Tapis atlet dari pendaftaran
-        let senarai = [];
-        for(let i=1; i<dataAtlet.length; i++) {
-            if(dataAtlet[i][4].includes(namaAcara) || dataAtlet[i][5].includes(namaAcara)) {
-                senarai.push({ noBadan: dataAtlet[i][0], nama: dataAtlet[i][1], kelas: dataAtlet[i][3] });
-            }
-        }
+        // Cek jika lorong sudah wujud di Google Sheet
+        let sediaAda = dataLorong.filter(r => r[2] == acara);
+        let senaraiDisplay = [];
 
-        // 2. Semak jika lorong sudah ada dalam database
-        let lorongSudahAda = dataLorong.filter(r => r[2] == namaAcara);
-        
-        if (lorongSudahAda.length === 0 && senarai.length > 0) {
-            // Jika belum ada, acak lorong (1-8)
-            let lorongTersedia = [1,2,3,4,5,6,7,8];
-            senarai = senarai.map(a => {
-                let indexRawak = Math.floor(Math.random() * lorongTersedia.length);
-                return { ...a, lorong: lorongTersedia.splice(indexRawak, 1)[0] || '-' };
-            });
-            // Simpan ke Google Sheet supaya kekal
-            simpanLorongKeDatabase(namaAcara, senarai);
+        if (sediaAda.length > 0) {
+            senaraiDisplay = sediaAda.map(l => ({ noBadan: l[0], nama: l[1], lorong: l[3] }));
         } else {
-            // Jika sudah ada, gunakan data dari tab Acara
-            senarai = lorongSudahAda.map(l => ({ noBadan: l[0], nama: l[1], kelas: '-', lorong: l[3] }));
+            // Tapis atlet baru & jana lorong random
+            let atletAcara = dataAtlet.filter(a => a.AcaraIndividu.includes(acara) || a.AcaraBerpasukan.includes(acara));
+            let lorongTersedia = [1,2,3,4,5,6,7,8];
+            
+            senaraiDisplay = atletAcara.map(a => {
+                let rdm = Math.floor(Math.random() * lorongTersedia.length);
+                return { noBadan: a.NomborBadan, nama: a.NamaMurid, lorong: lorongTersedia.splice(rdm, 1)[0] || '-' };
+            });
+
+            // Simpan ke Google Sheet
+            fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: "JANA_LORONG", namaAcara: acara, senarai: senaraiDisplay }) });
         }
 
-        paparkan(senarai);
-    }
-
-    function simpanLorongKeDatabase(namaAcara, senarai) {
-        fetch(scriptURL, {
-            method: 'POST',
-            mode: 'no-cors',
-            body: JSON.stringify({ action: "JANA_LORONG", namaAcara: namaAcara, senarai: senarai })
-        }).then(() => console.log("Lorong disimpan"));
-    }
-
-    function paparkan(senarai) {
         const tbody = document.getElementById('atletRows');
         tbody.innerHTML = '';
-        senarai.sort((a,b) => a.lorong - b.lorong).forEach((m, i) => {
-            tbody.innerHTML += `
-                <tr>
-                    <td>${i + 1}</td>
-                    <td class="lorong-col">${m.lorong}</td>
-                    <td>${m.noBadan}</td>
-                    <td>${m.nama}</td>
-                    <td>${m.kelas}</td>
-                    <td class="print-col"></td>
-                    <td class="print-col"></td>
-                </tr>`;
+        senaraiDisplay.sort((a,b) => a.lorong - b.lorong).forEach((m, i) => {
+            tbody.innerHTML += `<tr><td>${i+1}</td><td>${m.lorong}</td><td>${m.noBadan}</td><td>${m.nama}</td><td class="print-only"></td><td class="print-only"></td></tr>`;
         });
     }
-    window.onload = fetchAtlet;
+
+    window.onload = fetchData;
 </script>
+</body>
+</html>
