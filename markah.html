@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <title>Kemasukan Markah - SMKTD2</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        select, input, button { width: 100%; padding: 12px; margin-top: 10px; border-radius: 6px; border: 1px solid #ddd; }
+        button { background: #e67e22; color: white; font-weight: bold; cursor: pointer; border: none; }
+        .score-board { margin-top: 20px; border-top: 2px solid #eee; padding-top: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>KEMASUKAN MARKAH ACARA</h2>
+    
+    <label>Pilih Acara:</label>
+    <select id="pilihAcara">
+        <option value="70m">70m</option>
+        <option value="100m">100m</option>
+        <option value="400m">400m</option>
+        <option value="Lompat Jauh">Lompat Jauh</option>
+        </select>
+
+    <label>Rumah Sukan Pemenang:</label>
+    <select id="pilihRumah">
+        <option value="Kenyalang">Kenyalang</option>
+        <option value="Merak">Merak</option>
+        <option value="Helang">Helang</option>
+        <option value="Jentayu">Jentayu</option>
+        <option value="Belatuk">Belatuk</option>
+    </select>
+
+    <label>Kedudukan:</label>
+    <select id="kedudukan" onchange="kiraMata()">
+        <option value="1">Johan (1)</option>
+        <option value="2">Naib Johan (2)</option>
+        <option value="3">Ketiga (3)</option>
+    </select>
+
+    <label>Mata Diberi:</label>
+    <input type="number" id="mata" value="7" readonly>
+
+    <button onclick="simpanMarkah()">SIMPAN MARKAH</button>
+</div>
+
+<script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwtgxFA-ldGtuaUf9x8JS1BVM9LGuQDhXi-XDD_z9SCZF1QTTrD82ZQKuX_mLt-SAWh/exec';
+
+    function kiraMata() {
+        const ked = document.getElementById('kedudukan').value;
+        const mataInput = document.getElementById('mata');
+        if(ked == "1") mataInput.value = 7;
+        else if(ked == "2") mataInput.value = 5;
+        else if(ked == "3") mataInput.value = 3;
+    }
+
+    function simpanMarkah() {
+        const data = {
+            action: "SIMPAN_MARKAH",
+            acara: document.getElementById('pilihAcara').value,
+            rumah: document.getElementById('pilihRumah').value,
+            kedudukan: document.getElementById('kedudukan').value,
+            mata: document.getElementById('mata').value
+        };
+
+        fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) })
+        .then(() => {
+            alert('Markah bagi ' + data.rumah + ' berjaya disimpan!');
+        });
+    }
+</script>
+</body>
+</html>
