@@ -5,95 +5,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pendaftaran Sukan SMKTD2</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 20px; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #2c3e50; margin-bottom: 25px; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
-        
-        .form-group { margin-bottom: 15px; }
-        label { font-weight: bold; display: block; margin-bottom: 5px; color: #34495e; }
-        input[type="text"], select { width: 100%; padding: 12px; border: 1px solid #dcdde1; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
-        
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .section-label { background: #3498db; color: white; padding: 8px 12px; border-radius: 4px; margin: 20px 0 10px; font-weight: bold; }
-        
+        body { font-family: sans-serif; background: #f4f7f6; padding: 10px; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        input, select { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        .btn { padding: 12px; border: none; border-radius: 6px; cursor: pointer; color: white; font-weight: bold; }
+        .btn-save { background: #27ae60; width: 100%; margin-top: 10px; font-size: 16px; }
+        .btn-print { background: #2c3e50; margin-bottom: 10px; }
+        .btn-edit { background: #f39c12; padding: 5px 10px; margin-right: 5px; }
+        .btn-delete { background: #e74c3c; padding: 5px 10px; }
+        .section-header { background: #3498db; color: white; padding: 8px; margin: 15px 0; border-radius: 4px; font-weight: bold; }
         .checkbox-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
-        .checkbox-item { background: #f9f9f9; padding: 10px; border-radius: 6px; border: 1px solid #eee; display: flex; align-items: center; cursor: pointer; font-size: 14px; }
-        .checkbox-item input { margin-right: 10px; transform: scale(1.2); }
-        
-        .btn { padding: 12px 20px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s; color: white; }
-        .btn-save { background: #27ae60; width: 100%; font-size: 18px; margin-top: 20px; }
-        .btn-print { background: #2c3e50; margin-bottom: 15px; }
-        .btn-edit { background: #f39c12; font-size: 12px; padding: 5px 10px; }
-        .btn-delete { background: #e74c3c; font-size: 12px; padding: 5px 10px; }
-        
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; font-size: 13px; }
+        .check-item { background: #f9f9f9; border: 1px solid #eee; padding: 8px; border-radius: 5px; display: flex; align-items: center; font-size: 14px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
         th { background: #34495e; color: white; }
-        tr:nth-child(even) { background-color: #f2f2f2; }
-
-        .loading { text-align: center; font-weight: bold; color: #3498db; display: none; padding: 20px; }
-
-        /* CSS UNTUK CETAKAN */
-        @media print {
-            .no-print { display: none !important; }
-            .container { box-shadow: none; max-width: 100%; width: 100%; padding: 0; }
-            th:last-child, td:last-child { display: none; } /* Sorok kolom Tindakan */
-        }
+        .loading { color: #2980b9; font-weight: bold; display: none; text-align: center; padding: 10px; }
+        @media print { .no-print { display: none !important; } .container { box-shadow: none; max-width: 100%; } th:last-child, td:last-child { display: none; } }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="no-print">
-        <h2>PENDAFTARAN ATLET SUKAN SMKTD2</h2>
+        <h2 style="text-align:center;">Pendaftaran Atlet SMKTD2</h2>
         <form id="sportForm">
-            <div class="grid">
-                <div class="form-group">
-                    <label>Nombor Badan:</label>
-                    <input type="text" id="noBadan" placeholder="E.g: K001" required>
-                </div>
-                <div class="form-group">
-                    <label>Kelas:</label>
-                    <input type="text" id="kelas" placeholder="E.g: 4 Amanah" required>
-                </div>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="noBadan" placeholder="No Badan (E.g: K001)" required>
+                <input type="text" id="kelas" placeholder="Kelas (E.g: 1 Amanah)" required>
             </div>
-
-            <div class="form-group">
-                <label>Nama Penuh Murid:</label>
-                <input type="text" id="nama" placeholder="NAMA PENUH" required>
-            </div>
-
-            <div class="form-group">
-                <label>Rumah Sukan:</label>
-                <select id="rumah" required>
-                    <option value="Kenyalang">Kenyalang</option>
-                    <option value="Merak">Merak</option>
-                    <option value="Helang">Helang</option>
-                    <option value="Jentayu">Jentayu</option>
-                    <option value="Belatuk">Belatuk</option>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="nama" placeholder="Nama Penuh Murid" required style="flex: 2;">
+                <select id="jantina" required style="flex: 1;">
+                    <option value="">-- Jantina --</option>
+                    <option value="L">Lelaki</option>
+                    <option value="P">Perempuan</option>
                 </select>
             </div>
+            <select id="rumah">
+                <option value="Kenyalang">Kenyalang</option>
+                <option value="Merak">Merak</option>
+                <option value="Helang">Helang</option>
+                <option value="Jentayu">Jentayu</option>
+                <option value="Belatuk">Belatuk</option>
+            </select>
 
-            <div class="section-label">Acara Balapan (Larian)</div>
+            <div class="section-header">Pilih Acara</div>
             <div class="checkbox-grid">
-                <label class="checkbox-item"><input type="checkbox" name="ind" value="70m"> 70m</label>
-                <label class="checkbox-item"><input type="checkbox" name="ind" value="100m"> 100m</label>
-                <label class="checkbox-item"><input type="checkbox" name="ind" value="400m"> 400m</label>
-                <label class="checkbox-item"><input type="checkbox" name="pas" value="4x100m"> 4x100m</label>
-                <label class="checkbox-item"><input type="checkbox" name="pas" value="4x400m"> 4x400m</label>
+                <label class="check-item"><input type="checkbox" name="ind" value="70m"> 70m</label>
+                <label class="check-item"><input type="checkbox" name="ind" value="100m"> 100m</label>
+                <label class="check-item"><input type="checkbox" name="ind" value="400m"> 400m</label>
+                <label class="check-item"><input type="checkbox" name="ind" value="Lompat Jauh"> Lompat Jauh</label>
+                <label class="check-item"><input type="checkbox" name="ind" value="Lontar Peluru"> Lontar Peluru</label>
+                <label class="check-item"><input type="checkbox" name="ind" value="Lompat Tinggi"> Lompat Tinggi</label>
+                <label class="check-item"><input type="checkbox" name="pas" value="4x100m"> 4x100m</label>
+                <label class="check-item"><input type="checkbox" name="pas" value="4x400m"> 4x400m</label>
+                <label class="check-item"><input type="checkbox" name="pas" value="Tarik Tali"> Tarik Tali</label>
             </div>
-
-            <div class="section-label">Acara Padang & Khas</div>
-            <div class="checkbox-grid">
-                <label class="checkbox-item"><input type="checkbox" name="ind" value="Lompat Jauh"> Lompat Jauh</label>
-                <label class="checkbox-item"><input type="checkbox" name="ind" value="Lontar Peluru"> Lontar Peluru</label>
-                <label class="checkbox-item"><input type="checkbox" name="ind" value="Lompat Tinggi"> Lompat Tinggi</label>
-                <label class="checkbox-item"><input type="checkbox" name="pas" value="Tarik Tali"> Tarik Tali</label>
-            </div>
-
-            <button type="submit" class="btn btn-save" id="btnSimpan">SIMPAN DATA ATLET</button>
+            <button type="submit" class="btn btn-save" id="saveBtn">SIMPAN DATA</button>
         </form>
-        <hr style="margin: 40px 0;">
+        <hr style="margin: 20px 0;">
     </div>
 
     <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -101,14 +71,14 @@
         <button class="btn btn-print no-print" onclick="window.print()">🖨️ CETAK SENARAI</button>
     </div>
 
-    <div id="loading" class="loading">Sila tunggu, memuatkan data...</div>
-
+    <div id="loading" class="loading">Memproses data...</div>
     <div style="overflow-x: auto;">
         <table>
             <thead>
                 <tr>
                     <th>No Badan</th>
-                    <th>Nama Murid</th>
+                    <th>Nama</th>
+                    <th>Jantina</th>
                     <th>Kelas</th>
                     <th>Rumah</th>
                     <th>Acara</th>
@@ -121,93 +91,76 @@
 </div>
 
 <script>
-    // GANTIKAN URL INI DENGAN URL WEB APP GAS CIKGU
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbwtgxFA-ldGtuaUf9x8JS1BVM9LGuQDhXi-XDD_z9SCZF1QTTrD82ZQKuX_mLt-SAWh/exec';
-    let localData = [];
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwEBmbvGDCalb1iY-w4uWXs1zcw5ucgWB5OsadCVxK-JgAGWGl0HFOOQz5B18zPrDiq/exec';
+    let dataAtlet = [];
 
-    // 1. FUNGSI SIMPAN & EDIT
     document.getElementById('sportForm').addEventListener('submit', e => {
         e.preventDefault();
-        const btn = document.getElementById('btnSimpan');
-        btn.disabled = true;
-        btn.innerText = 'Menghantar Data...';
-
+        const btn = document.getElementById('saveBtn');
+        btn.innerText = 'Menyimpan...';
+        
         const payload = {
             action: "ADD",
             noBadan: document.getElementById('noBadan').value,
             nama: document.getElementById('nama').value,
             rumah: document.getElementById('rumah').value,
             kelas: document.getElementById('kelas').value,
+            jantina: document.getElementById('jantina').value,
             individu: Array.from(document.querySelectorAll('input[name="ind"]:checked')).map(el => el.value),
             berpasukan: Array.from(document.querySelectorAll('input[name="pas"]:checked')).map(el => el.value)
         };
 
         fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) })
         .then(() => {
-            alert('Berjaya Disimpan!');
+            alert('Data Berjaya Disimpan!');
             location.reload();
-        })
-        .catch(err => alert('Ralat: ' + err.message));
+        });
     });
 
-    // 2. FUNGSI MUAT DATA
-    function muatTurunData() {
+    function muatData() {
         document.getElementById('loading').style.display = 'block';
-        fetch(scriptURL)
-        .then(res => res.json())
-        .then(res => {
-            localData = res.atlet;
+        fetch(scriptURL).then(res => res.json()).then(res => {
+            dataAtlet = res.atlet;
             const body = document.getElementById('atletBody');
             body.innerHTML = '';
-            
             res.atlet.forEach(item => {
-                body.innerHTML += `
-                    <tr>
-                        <td>${item.NomborBadan}</td>
-                        <td>${item.NamaMurid}</td>
-                        <td>${item.Kelas}</td>
-                        <td>${item.RumahSukan}</td>
-                        <td>${item.AcaraIndividu}, ${item.AcaraBerpasukan}</td>
-                        <td class="no-print">
-                            <button class="btn btn-edit" onclick="isiBorang('${item.NomborBadan}')">Edit</button>
-                            <button class="btn btn-delete" onclick="padamData('${item.NomborBadan}')">Padam</button>
-                        </td>
-                    </tr>`;
+                body.innerHTML += `<tr>
+                    <td>${item.NomborBadan}</td>
+                    <td>${item.NamaMurid}</td>
+                    <td>${item.Jantina}</td>
+                    <td>${item.Kelas}</td>
+                    <td>${item.RumahSukan}</td>
+                    <td>${item.AcaraIndividu}, ${item.AcaraBerpasukan}</td>
+                    <td class="no-print">
+                        <button class="btn btn-edit" onclick="isiBorang('${item.NomborBadan}')">Edit</button>
+                        <button class="btn btn-delete" onclick="padamData('${item.NomborBadan}')">Padam</button>
+                    </td>
+                </tr>`;
             });
             document.getElementById('loading').style.display = 'none';
         });
     }
 
-    // 3. FUNGSI ISI BORANG UNTUK EDIT
-    function isiBorang(noBadan) {
-        const murid = localData.find(a => a.NomborBadan == noBadan);
-        if(murid) {
-            document.getElementById('noBadan').value = murid.NomborBadan;
-            document.getElementById('nama').value = murid.NamaMurid;
-            document.getElementById('kelas').value = murid.Kelas;
-            document.getElementById('rumah').value = murid.RumahSukan;
-            window.scrollTo({top: 0, behavior: 'smooth'});
-            alert('Sila kemaskini maklumat dan tekan Simpan.');
+    function padamData(no) {
+        if(confirm('Padam atlet ' + no + '?')) {
+            fetch(scriptURL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({action: "DELETE", noBadan: no}) })
+            .then(() => location.reload());
         }
     }
 
-    // 4. FUNGSI PADAM
-    function padamData(noBadan) {
-        if(confirm('Adakah anda pasti mahu memadam No Badan ' + noBadan + '?')) {
-            fetch(scriptURL, { 
-                method: 'POST', 
-                mode: 'no-cors', 
-                body: JSON.stringify({action: "DELETE", noBadan: noBadan}) 
-            })
-            .then(() => {
-                alert('Data telah dipadam.');
-                location.reload();
-            });
+    function isiBorang(no) {
+        const a = dataAtlet.find(x => x.NomborBadan == no);
+        if(a) {
+            document.getElementById('noBadan').value = a.NomborBadan;
+            document.getElementById('nama').value = a.NamaMurid;
+            document.getElementById('kelas').value = a.Kelas;
+            document.getElementById('jantina').value = a.Jantina;
+            document.getElementById('rumah').value = a.RumahSukan;
+            window.scrollTo(0,0);
         }
     }
 
-    window.onload = muatTurunData;
+    window.onload = muatData;
 </script>
-
 </body>
 </html>
