@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <title>Borang Pendaftaran Rumah Sukan - SMKTD2</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 11px; padding: 10px; background: #f0f2f5; }
+        .no-print { background: #fff; padding: 20px; border-bottom: 2px solid #ccc; margin-bottom: 20px; text-align: center; border-radius: 8px; }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 20px; border: 1px solid #000; }
+        
+        .header { display: flex; align-items: center; justify-content: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px; }
+        .header img { max-width: 70px; margin-right: 15px; }
+        .header-text { text-align: center; }
+        .header-text h2 { margin: 0; font-size: 16px; }
+        .header-text p { margin: 2px 0; font-size: 12px; font-weight: bold; }
+
+        .info-bar { display: flex; justify-content: space-between; font-weight: bold; font-size: 12px; margin-bottom: 10px; text-transform: uppercase; }
+        
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        th, td { border: 1px solid #000; padding: 5px; text-align: center; overflow: hidden; }
+        th { background: #eee; font-size: 9px; text-transform: uppercase; }
+        
+        .nama-col { text-align: left; padding-left: 5px; font-size: 10px; }
+        .vertical-text { writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; height: 80px; padding: 5px 0; }
+        
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; padding: 0; }
+            .container { border: none; width: 100%; max-width: 100%; }
+            @page { size: landscape; margin: 0.5cm; }
+        }
+
+        select, button { padding: 10px; font-size: 14px; margin: 5px; cursor: pointer; border-radius: 5px; border: 1px solid #ccc; }
+        .btn-generate { background: #27ae60; color: white; border: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="no-print">
+    <h2>JANA BORANG PENDAFTARAN RUMAH (MATRIX)</h2>
+    <select id="selRumah">
+        <option value="">-- Pilih Rumah Sukan --</option>
+        <option value="Kenyalang">Kenyalang</option>
+        <option value="Merak">Merak</option>
+        <option value="Helang">Helang</option>
+        <option value="Jentayu">Jentayu</option>
+        <option value="Belatuk">Belatuk</option>
+    </select>
+    <select id="selKat">
+        <option value="L1">L1 (Ting 4 & 5)</option>
+        <option value="L2">L2 (Ting 3)</option>
+        <option value="L3">L3 (Ting 1 & 2)</option>
+        <option value="P1">P1 (Ting 4 & 5)</option>
+        <option value="P2">P2 (Ting 3)</option>
+        <option value="P3">P3 (Ting 1 & 2)</option>
+    </select>
+    <button class="btn-generate" onclick="generate()">JANA BORANG</button>
+    <button onclick="window.print()" style="background:#2c3e50; color:white;">CETAK</button>
+    <p id="status">Memuat data...</p>
+</div>
+
+<div class="container">
+    <div class="header">
+        <img src="lencana.jpg" alt="Lencana SMKTD2">
+        <div class="header-text">
+            <h2>SEKOLAH MENENGAH KEBANGSAAN TAMAN DESA 2</h2>
+            <p>KEJOHANAN SUKAN TAHUNAN KALI KE-16, 2026</p>
+        </div>
+    </div>
+
+    <div class="info-bar">
+        <span>RUMAH SUKAN: <span id="dispRumah">..........</span></span>
+        <span>KATEGORI: <span id="dispKat">..........</span></span>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th width="30" rowspan="2">BIL</th>
+                <th rowspan="2">NAMA PESERTA MENGIKUT KAD<br>PENGENALAN (HURUF BESAR)</th>
+                <th width="60" rowspan="2">NOMBOR<br>BADAN</th>
+                <th width="40" rowspan="2">TINGKATAN / KELAS</th>
+                <th colspan="3">BALAPAN (IND)</th>
+                <th colspan="2">BALAPAN (PAS)</th>
+                <th colspan="3">PADANG</th>
+                <th width="30" rowspan="2">TARIK TALI</th>
+                <th width="35" rowspan="2">JUMLAH ACARA</th>
+            </tr>
+            <tr>
+                <th width="25" class="vertical-text">100 M</th>
+                <th width="25" class="vertical-text">400 M</th>
+                <th width="25" class="vertical-text">70 M</th>
+                <th width="25" class="vertical-text">4 X 100 M</th>
+                <th width="25" class="vertical-text">4 X 400 M</th>
+                <th width="25" class="vertical-text">LOMPAT TINGGI</th>
+                <th width="25" class="vertical-text">LOMPAT JAUH</th>
+                <th width="25" class="vertical-text">LONTAR PELURU</th>
+            </tr>
+        </thead>
+        <tbody id="atletRows">
+            </tbody>
+    </table>
+
+    <div style="margin-top: 20px; display: flex; justify-content: space-between;">
+        <p>Disahkan oleh Ketua Rumah Sukan: _______________________</p>
+        <p>Tarikh: ________________</p>
+    </div>
+</div>
+
+<script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyETL-JvZR3wuQ6x1qSCEQSziTaGDLcmPxZvepjnG4kjQHAJdqX0E2aeKeEOW84Iuui/exec';
+    let database = [];
+
+    window.onload = () => {
+        fetch(scriptURL).then(res => res.json()).then(res => {
+            database = res.atlet;
+            document.getElementById('status').innerText = '✅ Data Sedia.';
+        });
+    };
+
+    function generate() {
+        const rumah = document.getElementById('selRumah').value;
+        const kat = document.getElementById('selKat').value;
+        if(!rumah || !kat) return alert("Sila pilih Rumah dan Kategori");
+
+        document.getElementById('dispRumah').innerText = rumah.toUpperCase();
+        document.getElementById('dispKat').innerText = kat;
+
+        const tbody = document.getElementById('atletRows');
+        tbody.innerHTML = '';
+
+        // Tapis mengikut rumah dan kategori
+        let senarai = database.filter(a => {
+            let ting = a.Kelas.charAt(0);
+            let k = (ting == "1" || ting == "2") ? a.Jantina + "3" : (ting == "3" ? a.Jantina + "2" : a.Jantina + "1");
+            return a.RumahSukan === rumah && k === kat;
+        });
+
+        senarai.forEach((m, i) => {
+            let acInd = m.AcaraIndividu || "";
+            let acPas = m.AcaraBerpasukan || "";
+            
+            // Kira jumlah acara
+            let total = (acInd ? acInd.split(',').length : 0) + (acPas ? acPas.split(',').length : 0);
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td class="nama-col">${m.NamaMurid.toUpperCase()}</td>
+                    <td>${m.NomborBadan}</td>
+                    <td>${m.Kelas}</td>
+                    <td>${acInd.includes('100m') ? 'X' : ''}</td>
+                    <td>${acInd.includes('400m') ? 'X' : ''}</td>
+                    <td>${acInd.includes('70m') ? 'X' : ''}</td>
+                    <td>${acPas.includes('4x100m') ? 'X' : ''}</td>
+                    <td>${acPas.includes('4x400m') ? 'X' : ''}</td>
+                    <td>${acInd.includes('Lompat Tinggi') ? 'X' : ''}</td>
+                    <td>${acInd.includes('Lompat Jauh') ? 'X' : ''}</td>
+                    <td>${acInd.includes('Lontar Peluru') ? 'X' : ''}</td>
+                    <td>${acPas.includes('Tarik Tali') ? 'X' : ''}</td>
+                    <td>${total}</td>
+                </tr>`;
+        });
+
+        // Tambah baris kosong jika senarai sikit (untuk bagi nampak borang penuh)
+        for(let j = senarai.length; j < 20; j++) {
+            tbody.innerHTML += `<tr><td>${j+1}</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`;
+        }
+    }
+</script>
+</body>
+</html>
