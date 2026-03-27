@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <title>Borang Hakim Padang - SMKTD2</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 10px; background: #f4f7f6; }
+        .no-print { background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .container { max-width: 950px; margin: auto; background: white; padding: 25px; border: 2px solid #000; }
+        
+        .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; position: relative; }
+        .header img { position: absolute; left: 10px; top: 0; max-width: 75px; }
+        .header h2 { margin: 0; font-size: 20px; text-transform: uppercase; }
+        .header p { margin: 5px 0; font-weight: bold; font-size: 16px; }
+
+        .info-table { width: 100%; margin-bottom: 15px; border: none; }
+        .info-table td { border: none; padding: 5px; font-weight: bold; font-size: 14px; }
+        .box { border: 2px solid #000; padding: 4px 12px; display: inline-block; min-width: 40px; text-align: center; margin: 0 2px; }
+        .highlight { background-color: #000 !important; color: #fff !important; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 2px solid #000; padding: 10px; text-align: center; }
+        th { background: #eee; font-size: 12px; text-transform: uppercase; }
+        
+        .nama-peserta { text-align: left; padding-left: 10px; font-size: 13px; font-weight: bold; }
+        .trial-box { height: 40px; }
+        
+        .footer { margin-top: 40px; display: flex; justify-content: space-between; font-weight: bold; }
+        .note { font-size: 11px; margin-top: 15px; font-style: italic; }
+        
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; padding: 0; }
+            .container { border: 2px solid #000; width: 100%; }
+        }
+
+        select, button { padding: 12px; font-size: 14px; margin: 5px; border-radius: 6px; border: 1px solid #ccc; cursor: pointer; }
+        .btn-jana { background: #27ae60; color: white; border: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="no-print">
+    <h3>PANEL JANA BORANG ACARA PADANG</h3>
+    <select id="selAcara">
+        <option value="Lontar Peluru">LONTAR PELURU</option>
+        <option value="Lompat Jauh">LOMPAT JAUH</option>
+        <option value="Lompat Tinggi">LOMPAT TINGGI</option>
+    </select>
+    <select id="selKat">
+        <option value="L1">L1</option><option value="L2">L2</option><option value="L3">L3</option>
+        <option value="P1">P1</option><option value="P2">P2</option><option value="P3">P3</option>
+    </select>
+    <button class="btn-jana" onclick="janaBorang()">JANA & PAPAR</button>
+    <button onclick="window.print()" style="background:#2c3e50; color:white;">CETAK BORANG</button>
+</div>
+
+<div class="container">
+    <div class="header">
+        <img src="lencana.jpg" alt="Logo SMKTD2">
+        <h2>KEJOHANAN SUKAN OLAHRAGA KALI KE-16</h2>
+        <p>SMK TAMAN DESA 2</p>
+    </div>
+
+    <table class="info-table">
+        <tr>
+            <td width="15%">ACARA</td>
+            <td width="40%">: <span class="box" style="min-width: 150px;" id="dispAcara"></span></td>
+            <td width="10%">KELAS</td>
+            <td>: 
+                <span class="box" id="boxK1">1</span> 
+                <span class="box" id="boxK2">2</span> 
+                <span class="box" id="boxK3">3</span>
+                <small style="font-weight: normal; margin-left: 5px;">(Bulatkan)</small>
+            </td>
+        </tr>
+        <tr>
+            <td>JANTINA</td>
+            <td>: <span class="box" id="boxL">L</span> <span class="box" id="boxP">P</span></td>
+            <td>KATEGORI</td>
+            <td>: <span id="dispFullKat" style="border-bottom: 1px dashed #000; min-width: 100px; display: inline-block;"></span></td>
+        </tr>
+    </table>
+
+    <table>
+        <thead>
+            <tr>
+                <th rowspan="2" width="40">BIL</th>
+                <th rowspan="2">NAMA PESERTA</th>
+                <th rowspan="2" width="120">RUMAH SUKAN</th>
+                <th colspan="3">JARAK / KETINGGIAN</th>
+                <th rowspan="2" width="85">TERBAIK</th>
+                <th rowspan="2" width="85">KEDUDUKAN</th>
+                <th rowspan="2" width="70">MATA</th>
+            </tr>
+            <tr>
+                <th width="75">1</th>
+                <th width="75">2</th>
+                <th width="75">3</th>
+            </tr>
+        </thead>
+        <tbody id="atletRows">
+            </tbody>
+    </table>
+
+    <div class="footer">
+        <div>
+            <p>NAMA PENCATAT : _________________________________</p>
+        </div>
+        <div>
+            <p>TANDATANGAN : __________________</p>
+        </div>
+    </div>
+    
+    <div class="note">
+        * Catatkan jarak lompatan / lontaran bagi yang tidak batal dan tanda ( X ) bagi cubaan yang batal.
+    </div>
+</div>
+
+<script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbyETL-JvZR3wuQ6x1qSCEQSziTaGDLcmPxZvepjnG4kjQHAJdqX0E2aeKeEOW84Iuui/exec';
+    let dataSemua = [];
+
+    window.onload = () => {
+        fetch(scriptURL).then(res => res.json()).then(res => {
+            dataSemua = res.atlet;
+            document.getElementById('selAcara').previousElementSibling.innerText = '✅ Data Berjaya Dimuatkan';
+        });
+    };
+
+    function janaBorang() {
+        const acara = document.getElementById('selAcara').value;
+        const kat = document.getElementById('selKat').value;
+        
+        document.getElementById('dispAcara').innerText = acara.toUpperCase();
+        document.getElementById('dispFullKat').innerText = kat;
+
+        // Reset semua kotak highlight
+        ["boxK1", "boxK2", "boxK3", "boxL", "boxP"].forEach(id => {
+            document.getElementById(id).classList.remove('highlight');
+        });
+
+        // Logik Highlight mengikut Kategori (L1, P3, dll)
+        if(kat.includes('1')) document.getElementById('boxK1').classList.add('highlight');
+        if(kat.includes('2')) document.getElementById('boxK2').classList.add('highlight');
+        if(kat.includes('3')) document.getElementById('boxK3').classList.add('highlight');
+        if(kat.includes('L')) document.getElementById('boxL').classList.add('highlight');
+        if(kat.includes('P')) document.getElementById('boxP').classList.add('highlight');
+
+        const tbody = document.getElementById('atletRows');
+        tbody.innerHTML = '';
+
+        // Tapis atlet mengikut acara dan kategori
+        let senarai = dataSemua.filter(a => {
+            let ting = a.Kelas.charAt(0);
+            let k = (ting == "1" || ting == "2") ? a.Jantina + "3" : (ting == "3" ? a.Jantina + "2" : a.Jantina + "1");
+            return a.AcaraIndividu.includes(acara) && k == kat;
+        });
+
+        // Masukkan data atlet ke dalam jadual
+        senarai.forEach((m, i) => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td class="nama-peserta">${m.NamaMurid.toUpperCase()}</td>
+                    <td>${m.RumahSukan.toUpperCase()}</td>
+                    <td class="trial-box"></td>
+                    <td class="trial-box"></td>
+                    <td class="trial-box"></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>`;
+        });
+
+        // Tambah baris kosong (Filler) supaya borang nampak penuh (sehingga 12 baris)
+        let barisSediaAda = senarai.length;
+        for(let j = barisSediaAda; j < 12; j++) {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${j + 1}</td>
+                    <td></td>
+                    <td></td>
+                    <td class="trial-box"></td>
+                    <td class="trial-box"></td>
+                    <td class="trial-box"></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>`;
+        }
+    }
+</script>
+</body>
+</html>
