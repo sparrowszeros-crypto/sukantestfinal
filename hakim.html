@@ -2,190 +2,124 @@
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Borang Hakim - SMKTD2</title>
     <style>
-        body { font-family: 'Helvetica', Arial, sans-serif; background: #f0f2f5; padding: 20px; }
-        .container { max-width: 950px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .no-print { background: #fff; padding: 20px; border-bottom: 2px solid #eee; margin-bottom: 20px; text-align: center; }
-        h2, h3 { color: #2c3e50; text-align: center; }
-        .btn-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin: 20px 0; }
-        button { padding: 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .btn-event { background: #3498db; color: white; border-bottom: 3px solid #2980b9; }
-        .btn-event:hover { background: #2980b9; }
-        .btn-print { background: #2c3e50; color: white; width: 100%; margin-top: 20px; font-size: 16px; }
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f2f5; }
+        .container { max-width: 950px; margin: auto; background: white; padding: 30px; border: 1px solid #333; }
+        .no-print { background: #fff; padding: 20px; border-bottom: 2px solid #ccc; margin-bottom: 20px; text-align: center; }
+        .btn-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin: 15px 0; }
+        button { padding: 10px; cursor: pointer; font-weight: bold; border-radius: 4px; border: none; }
+        .btn-event { background: #3498db; color: white; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; table-layout: fixed; }
-        th, td { border: 1px solid #333; padding: 10px; text-align: left; overflow: hidden; word-wrap: break-word; }
-        th { background: #f8f9fa; }
-        .category-header { background: #34495e !important; color: white !important; font-weight: bold; font-size: 1.1em; }
-        .header-borang { display: none; text-align: center; margin-bottom: 20px; }
-        .signature-section { display: none; margin-top: 40px; }
-        
+        th, td { border: 1px solid #000 !important; padding: 8px; text-align: left; word-wrap: break-word; }
+        th { background: #eee; }
+        .cat-header { background: #2c3e50 !important; color: white !important; font-weight: bold; padding: 10px; }
+        .team-names { font-size: 11px; color: #444; margin-top: 4px; display: block; }
         @media print {
             .no-print { display: none !important; }
             body { background: white; padding: 0; }
-            .container { box-shadow: none; max-width: 100%; border: none; padding: 10px; }
-            .header-borang, .signature-section { display: block !important; }
-            .print-col { display: table-cell !important; }
-            th { background: #eee !important; color: black !important; }
-            td { border: 1px solid #333 !important; } /* Pastikan garisan muncul semasa print */
+            .container { border: none; max-width: 100%; }
         }
-        .print-col { display: none; } /* Sembunyi ruangan keputusan semasa di skrin */
     </style>
 </head>
 <body>
 
+<div class="no-print">
+    <h2>PANEL HAKIM PENCATAT SMKTD2</h2>
+    <div class="btn-grid" id="eventButtons"></div>
+    <p id="status">Memuat data...</p>
+</div>
+
 <div class="container">
-    <div class="no-print">
-        <h2>SISTEM PENGURUSAN HAKIM SUKAN SMKTD2</h2>
-        <p>Sila pilih acara untuk menjana borang keputusan mengikut kategori.</p>
-        <div class="btn-grid" id="eventButtons"></div>
-        <div id="status" style="text-align:center; color: #3498db; font-weight: bold;">Memuatkan data atlet... Sila tunggu.</div>
+    <div style="text-align:center;">
+        <img src="lencana.jpg" alt="Lencana" style="max-width:80px;">
+        <h2 style="margin:5px 0;">BORANG PENCATAT KEPUTUSAN</h2>
+        <h3 style="margin:5px 0;">ACARA: <span id="eventTitle">..........</span></h3>
     </div>
 
-    <div id="printableContent">
-        <div class="header-borang">
-            <h2 style="margin:0;">BORANG KEPUTUSAN RASMI</h2>
-            <h3 style="margin:5px 0;">ACARA: <span id="eventTitle">..........</span></h3>
-            <p>KEJOHANAN SUKAN TAHUNAN SMK TAMAN DESA 2 2026</p>
-            <hr style="border:1px solid #333">
-        </div>
-
-        <table>
-            <thead>
-                <tr>
-                    <th width="5%">No</th>
-                    <th width="15%">Saringan/Lorong</th>
-                    <th width="12%">No Badan</th>
-                    <th>Nama Murid (Kelas)</th>
-                    <th class="print-col" width="15%">Masa/Jarak</th>
-                    <th class="print-col" width="10%">Kedudukan</th>
-                </tr>
-            </thead>
-            <tbody id="atletRows">
-                <tr><td colspan="6" style="text-align:center;">Sila pilih acara di atas</td></tr>
-            </tbody>
-        </table>
-
-        <div class="signature-section">
-            <table style="border:none; margin-top: 50px; width: 100%">
-                <tr style="border:none;">
-                    <td style="border:none; width: 50%;">
-                        <p>Dicatat oleh (Hakim):</p>
-                        <br><br>
-                        <p>__________________________<br>( Nama: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )</p>
-                    </td>
-                    <td style="border:none; width: 50%;">
-                        <p>Disahkan oleh (Referi):</p>
-                        <br><br>
-                        <p>__________________________<br>( Nama: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )</p>
-                    </td>
-                </tr>
-            </table>
-        </div>
-    </div>
-
-    <button class="btn-print no-print" onclick="window.print()">CETAK BORANG HAKIM INI</button>
+    <table>
+        <thead>
+            <tr>
+                <th width="5%">No</th>
+                <th width="15%">Saringan/Lorong</th>
+                <th width="12%">No Badan</th>
+                <th>Nama Atlet / Pasukan (Rumah)</th>
+                <th width="15%">Masa/Jarak</th>
+                <th width="10%">Kedudukan</th>
+            </tr>
+        </thead>
+        <tbody id="atletRows"></tbody>
+    </table>
 </div>
 
 <script>
-    // GANTIKAN DENGAN URL WEB APP GAS ANDA
     const scriptURL = 'https://script.google.com/macros/s/AKfycbyETL-JvZR3wuQ6x1qSCEQSziTaGDLcmPxZvepjnG4kjQHAJdqX0E2aeKeEOW84Iuui/exec';
     let database = [];
-    const acaraList = ["70m", "100m", "400m", "4x100m", "4x400m", "Tarik Tali", "Lompat Jauh", "Lontar Peluru", "Lompat Tinggi"];
+    const acaraList = ["70m", "100m", "400m", "4x100m", "4x400m", "Lompat Jauh", "Lontar Peluru", "Lompat Tinggi", "Tarik Tali"];
 
-    // Bina butang secara automatik
     const btnArea = document.getElementById('eventButtons');
-    acaraList.forEach(acara => {
-        btnArea.innerHTML += `<button class="btn-event" onclick="generateBorang('${acara}')">${acara}</button>`;
+    acaraList.forEach(a => {
+        btnArea.innerHTML += `<button class="btn-event" onclick="generateBorang('${a}')">${a}</button>`;
     });
 
-    // Ambil data dari Google Sheets
-    function fetchAtlet() {
-        fetch(scriptURL)
-        .then(res => res.json())
-        .then(data => {
-            // Asumsikan data.atlet mengandungi NomborBadan, NamaMurid, Kelas, Jantina, AcaraIndividu, AcaraBerpasukan
-            database = data.atlet; 
-            document.getElementById('status').innerText = 'Data Sedia. Sila pilih acara.';
-        })
-        .catch(err => {
-            document.getElementById('status').innerText = 'Ralat: Gagal memuatkan data atlet.';
-            console.error(err);
+    window.onload = () => {
+        fetch(scriptURL).then(res => res.json()).then(res => {
+            database = res.atlet;
+            document.getElementById('status').innerText = '✅ Data Sedia.';
         });
-    }
+    };
 
-    function generateBorang(namaAcara) {
-        document.getElementById('eventTitle').innerText = namaAcara.toUpperCase();
+    function generateBorang(acara) {
+        document.getElementById('eventTitle').innerText = acara.toUpperCase();
         const tbody = document.getElementById('atletRows');
         tbody.innerHTML = '';
 
-        // 1. Tapis atlet dari pendaftaran yang mengambil acara ini
-        let atletAcara = database.filter(atlet => {
-            return (atlet.AcaraIndividu && atlet.AcaraIndividu.includes(namaAcara)) || 
-                   (atlet.AcaraBerpasukan && atlet.AcaraBerpasukan.includes(namaAcara));
-        });
+        let isTeamEvent = acara.includes("4x") || acara.includes("Tarik");
+        let filtered = database.filter(a => (a.AcaraIndividu.includes(acara) || a.AcaraBerpasukan.includes(acara)));
 
-        // 2. Pecahkan kepada kategori mengikut Jantina dan Tingkatan
-        let kategoriMap = { "L1": [], "L2": [], "L3": [], "P1": [], "P2": [], "P3": [] };
-
-        atletAcara.forEach(a => {
-            // Dapatkan Tingkatan dari digit pertama Kelas (E.g: '4 Amanah' -> '4')
-            let formNumber = a.Kelas ? a.Kelas.charAt(0) : ""; 
-            let jant = a.Jantina; // Pastikan data sheet mengandungi kolom Jantina (L/P)
+        let kategoriMap = {};
+        filtered.forEach(a => {
             let kat = "";
-
-            // Logik Kategori:
-            // Ting 1 & 2 -> Kategori 3
-            // Ting 3 -> Kategori 2
-            // Ting 4 & 5 -> Kategori 1
-            if (formNumber === "1" || formNumber === "2") kat = jant + "3";
-            else if (formNumber === "3") kat = jant + "2";
-            else if (formNumber === "4" || formNumber === "5") kat = jant + "1";
-
-            if(kategoriMap[kat]) kategoriMap[kat].push(a);
+            if (acara === "4x400m") {
+                kat = a.Jantina === "L" ? "LELAKI TERBUKA" : "PEREMPUAN TERBUKA";
+            } else {
+                let ting = a.Kelas.charAt(0);
+                if (ting == "1" || ting == "2") kat = a.Jantina + "3";
+                else if (ting == "3") kat = a.Jantina + "2";
+                else if (ting == "4" || ting == "5") kat = a.Jantina + "1";
+            }
+            if (!kategoriMap[kat]) kategoriMap[kat] = isTeamEvent ? {} : [];
+            
+            if (isTeamEvent) {
+                if (!kategoriMap[kat][a.RumahSukan]) kategoriMap[kat][a.RumahSukan] = [];
+                kategoriMap[kat][a.RumahSukan].push(a.NamaMurid);
+            } else {
+                kategoriMap[kat].push(a);
+            }
         });
 
-        // 3. Paparkan data mengikut kategori dan saringan automatik
-        let entriesExist = false;
         for (let kat in kategoriMap) {
-            if (kategoriMap[kat].length > 0) {
-                entriesExist = true;
-                // Header Kategori
+            tbody.innerHTML += `<tr><td colspan="6" class="cat-header">KATEGORI: ${kat}</td></tr>`;
+            let list = isTeamEvent ? Object.keys(kategoriMap[kat]) : kategoriMap[kat];
+
+            list.forEach((item, i) => {
+                let lane = (i % 8) + 1;
+                let heat = Math.ceil((i + 1) / 8);
+                let namaDisplay = isTeamEvent ? 
+                    `<strong>${item.toUpperCase()}</strong><span class="team-names">Pelari: ${kategoriMap[kat][item].join(", ")}</span>` : 
+                    `${item.NamaMurid} (${item.Kelas} - ${item.RumahSukan})`;
+                
                 tbody.innerHTML += `
                     <tr>
-                        <td colspan="6" class="category-header">
-                            KATEGORI: ${kat} (${kategoriMap[kat].length} Peserta)
-                        </td>
+                        <td>${i + 1}</td>
+                        <td style="color:red; font-weight:bold">S${heat}-L${lane}</td>
+                        <td style="text-align:center">${isTeamEvent ? '-' : item.NomborBadan}</td>
+                        <td>${namaDisplay}</td>
+                        <td></td><td></td>
                     </tr>`;
-                
-                let peserta = kategoriMap[kat];
-                peserta.forEach((m, index) => {
-                    // Logik Saringan & Lorong Automatik (Max 8 Lorong)
-                    // Orang ke-9 akan masuk Saringan 2 (S2), Lorong 1 (L1)
-                    let lane = (index % 8) + 1; 
-                    let heat = Math.ceil((index + 1) / 8);
-
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${index + 1}</td>
-                            <td style="color:red; font-weight:bold">S${heat}-L${lane}</td>
-                            <td>${m.NomborBadan}</td>
-                            <td>${m.NamaMurid} (${m.Kelas})</td>
-                            <td class="print-col"></td>
-                            <td class="print-col"></td>
-                        </tr>`;
-                });
-            }
-        }
-
-        if(!entriesExist) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Tiada atlet berdaftar untuk acara ini.</td></tr>';
+            });
         }
     }
-
-    window.onload = fetchAtlet;
 </script>
-
 </body>
 </html>
