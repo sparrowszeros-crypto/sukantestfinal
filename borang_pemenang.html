@@ -7,26 +7,17 @@
         body { font-family: sans-serif; padding: 20px; background: #f4f7f6; }
         .container { max-width: 850px; margin: auto; background: white; padding: 40px; border: 2px solid #333; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
         .no-print { background: #fff; padding: 20px; border-bottom: 2px solid #ddd; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        
         .header { text-align: center; border-bottom: 4px double #333; padding-bottom: 15px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; }
         .header img { max-width: 80px; margin-right: 20px; }
-        
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 2px solid #333; padding: 12px; text-align: center; font-size: 16px; }
         th { background: #eee; }
-        
         .winner-row { height: 50px; font-weight: bold; }
         .signature-grid { display: flex; justify-content: space-between; margin-top: 50px; }
-        
         select, input { padding: 8px; margin: 5px; border-radius: 4px; border: 1px solid #ccc; font-size: 14px; }
         .selection-box { background: #eef2f3; padding: 15px; border-radius: 8px; margin-top: 10px; }
         .btn-save { background: #27ae60; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-
-        @media print {
-            .no-print { display: none !important; }
-            body { background: white; padding: 0; }
-            .container { box-shadow: none; border: 2px solid #000; width: 100%; }
-        }
+        @media print { .no-print { display: none !important; } .container { border: 2px solid #000; width: 100%; } }
     </style>
 </head>
 <body>
@@ -36,14 +27,7 @@
     <div class="selection-box">
         <label>1. Pilih Acara:</label>
         <select id="selAcara" onchange="filterAtlet()">
-            <option value="">-- Pilih Acara --</option>
-            <option value="100m">100m</option>
-            <option value="200m">200m</option>
-            <option value="400m">400m</option>
-            <option value="4x100m">4x100m</option>
-            <option value="Lompat Jauh">Lompat Jauh</option>
-            <option value="Lontar Peluru">Lontar Peluru</option>
-            <option value="Lompat Tinggi">Lompat Tinggi</option>
+            <option value="">-- Memuatkan Acara... --</option>
         </select>
 
         <label>2. Pilih Kategori:</label>
@@ -57,8 +41,7 @@
             <option value="P3">P3 (Ting 1-2)</option>
         </select>
         
-        <span id="status" style="margin-left:15px; font-weight:bold; color:#e67e22;">Memuat data...</span>
-        
+        <span id="status" style="margin-left:15px; font-weight:bold; color:#e67e22;">Menghubung...</span>
         <hr>
 
         <div id="pemenangSelectors" style="display:none;">
@@ -79,16 +62,16 @@
     </div>
 </div>
 
-<div class="container" id="printableArea">
+<div class="container">
     <div class="header">
-        <img src="lencana.jpg" alt="Lencana Sekolah">
+        <img src="lencana.jpg" alt="Lencana">
         <div>
             <h1 style="margin:0; font-size:22px;">KEJOHANAN SUKAN TAHUNAN SMKTD2 2026</h1>
             <h2 style="margin:5px 0; color:#c0392b;">BORANG KEPUTUSAN & PENGUMUMAN RASMI</h2>
         </div>
     </div>
 
-    <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 18px; margin-bottom: 10px;">
+    <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 18px;">
         <span>ACARA: <span id="dispAcara">..........</span></span>
         <span>KATEGORI: <span id="dispKat">..........</span></span>
     </div>
@@ -104,18 +87,9 @@
             </tr>
         </thead>
         <tbody>
-            <tr class="winner-row">
-                <td>PERTAMA (JOHAN)</td>
-                <td id="b_no1"></td><td id="b_nama1"></td><td id="b_rumah1"></td><td id="b_rec1"></td>
-            </tr>
-            <tr class="winner-row">
-                <td>KEDUA (NAIB JOHAN)</td>
-                <td id="b_no2"></td><td id="b_nama2"></td><td id="b_rumah2"></td><td id="b_rec2"></td>
-            </tr>
-            <tr class="winner-row">
-                <td>KETIGA</td>
-                <td id="b_no3"></td><td id="b_nama3"></td><td id="b_rumah3"></td><td id="b_rec3"></td>
-            </tr>
+            <tr class="winner-row"><td>PERTAMA (JOHAN)</td><td id="b_no1"></td><td id="b_nama1"></td><td id="b_rumah1"></td><td id="b_rec1"></td></tr>
+            <tr class="winner-row"><td>KEDUA (NAIB JOHAN)</td><td id="b_no2"></td><td id="b_nama2"></td><td id="b_rumah2"></td><td id="b_rec2"></td></tr>
+            <tr class="winner-row"><td>KETIGA</td><td id="b_no3"></td><td id="b_nama3"></td><td id="b_rumah3"></td><td id="b_rec3"></td></tr>
         </tbody>
     </table>
 
@@ -124,14 +98,8 @@
     </div>
 
     <div class="signature-grid">
-        <div style="text-align:center;">
-            <p>_______________________</p>
-            <p><strong>HAKIM PENCATAT</strong></p>
-        </div>
-        <div style="text-align:center;">
-            <p>_______________________</p>
-            <p><strong>REFERI / KETUA HAKIM</strong></p>
-        </div>
+        <div style="text-align:center;"><p>_______________________</p><p><strong>HAKIM PENCATAT</strong></p></div>
+        <div style="text-align:center;"><p>_______________________</p><p><strong>REFERI / KETUA HAKIM</strong></p></div>
     </div>
 </div>
 
@@ -144,77 +112,83 @@
         fetch(scriptURL)
         .then(res => res.json())
         .then(res => {
-            dataSemuaAtlet = res.atlet; // Masuk ke dalam laci 'atlet'
-            document.getElementById('status').innerText = '✅ Data Berjaya Ditarik.';
-            setTimeout(() => { document.getElementById('status').style.display = 'none'; }, 3000);
-        })
-        .catch(err => {
-            document.getElementById('status').innerText = '❌ Ralat Internet!';
+            dataSemuaAtlet = res.atlet;
+            janaDropdownAcara();
+            document.getElementById('status').innerText = '✅ Data Sedia.';
+            setTimeout(() => { document.getElementById('status').style.display = 'none'; }, 2000);
         });
     };
+
+    function janaDropdownAcara() {
+        const selAcara = document.getElementById('selAcara');
+        // Kumpulkan semua acara unik dari AcaraIndividu dan AcaraBerpasukan
+        let senaraiAcara = [];
+        dataSemuaAtlet.forEach(a => {
+            if (a.AcaraIndividu) a.AcaraIndividu.split(',').forEach(s => senaraiAcara.push(s.trim()));
+            if (a.AcaraBerpasukan) a.AcaraBerpasukan.split(',').forEach(s => senaraiAcara.push(s.trim()));
+        });
+        
+        let acaraUnik = [...new Set(senaraiAcara)].sort();
+        selAcara.innerHTML = '<option value="">-- Pilih Acara --</option>';
+        acaraUnik.forEach(aca => {
+            if(aca) selAcara.innerHTML += `<option value="${aca}">${aca}</option>`;
+        });
+    }
 
     function filterAtlet() {
         const acara = document.getElementById('selAcara').value;
         const kat = document.getElementById('selKat').value;
-        
         if(!acara || !kat) return;
 
         document.getElementById('dispAcara').innerText = acara.toUpperCase();
         document.getElementById('dispKat').innerText = kat;
 
         atletTapis = dataSemuaAtlet.filter(a => {
-            // Logika penentuan kategori berdasarkan kelas (Contoh: Ting 1-2 = Kelas 3)
             let ting = a.Kelas.toString().charAt(0);
             let katM = "";
             if(ting == "1" || ting == "2") katM = a.Jantina + "3";
             else if(ting == "3") katM = a.Jantina + "2";
             else if(ting == "4" || ting == "5") katM = a.Jantina + "1";
             
-            return (a.AcaraIndividu.includes(acara) || a.AcaraBerpasukan.includes(acara)) && katM == kat;
+            // Semak kedua-dua kolum (Individu & Berpasukan)
+            const padanAcara = (a.AcaraIndividu && a.AcaraIndividu.includes(acara)) || 
+                               (a.AcaraBerpasukan && a.AcaraBerpasukan.includes(acara));
+            
+            return padanAcara && katM == kat;
         });
 
         [1, 2, 3].forEach(n => {
             const sel = document.getElementById('win' + n);
             sel.innerHTML = '<option value="">-- Pilih Nama --</option>';
-            atletTapis.forEach(a => {
-                sel.innerHTML += `<option value="${a.NomborBadan}">${a.NomborBadan} - ${a.NamaMurid}</option>`;
+            atletTapis.sort((a,b) => a.NamaMurid.localeCompare(b.NamaMurid)).forEach(a => {
+                sel.innerHTML += `<option value="${a.NomborBadan}">${a.NomborBadan} - ${a.NamaMurid} (${a.RumahSukan})</option>`;
             });
         });
-
         document.getElementById('pemenangSelectors').style.display = 'block';
     }
 
     function updateBorang(n) {
         const noBadan = document.getElementById('win' + n).value;
         const atlet = atletTapis.find(a => a.NomborBadan == noBadan);
-        
         if(atlet) {
             document.getElementById('b_no' + n).innerText = atlet.NomborBadan;
             document.getElementById('b_nama' + n).innerText = atlet.NamaMurid;
             document.getElementById('b_rumah' + n).innerText = atlet.RumahSukan;
-        } else {
-            document.getElementById('b_no' + n).innerText = "";
-            document.getElementById('b_nama' + n).innerText = "";
-            document.getElementById('b_rumah' + n).innerText = "";
         }
     }
 
-    function syncRecord(n) {
-        document.getElementById('b_rec' + n).innerText = document.getElementById('record' + n).value;
-    }
+    function syncRecord(n) { document.getElementById('b_rec' + n).innerText = document.getElementById('record' + n).value; }
 
     function simpanDanCetak() {
         const acara = document.getElementById('selAcara').value;
         const kat = document.getElementById('selKat').value;
         const btn = document.getElementById('btnSimpan');
-        
         let pemenang = [];
         for(let i=1; i<=3; i++) {
             const no = document.getElementById('b_no' + i).innerText;
             if(no) {
                 pemenang.push({
-                    kedudukan: i,
-                    noBadan: no,
+                    kedudukan: i, noBadan: no,
                     nama: document.getElementById('b_nama' + i).innerText,
                     rumah: document.getElementById('b_rumah' + i).innerText,
                     rekod: document.getElementById('b_rec' + i).innerText,
@@ -222,31 +196,15 @@
                 });
             }
         }
-
-        if(pemenang.length === 0) return alert("Sila pilih sekurang-kurangnya satu pemenang!");
-
-        btn.innerText = "⌛ Menyimpan...";
-        btn.disabled = true;
-
+        if(pemenang.length === 0) return alert("Sila pilih pemenang!");
+        btn.innerText = "⌛ Menyimpan..."; btn.disabled = true;
         fetch(scriptURL, {
             method: 'POST',
-            body: JSON.stringify({
-                action: 'SIMPAN_MARKAH',
-                acara: acara,
-                kategori: kat,
-                pemenang: pemenang
-            })
+            body: JSON.stringify({ action: 'SIMPAN_MARKAH', acara: acara, kategori: kat, pemenang: pemenang })
         })
-        .then(() => {
-            btn.innerText = "✅ BERJAYA";
-            setTimeout(() => { window.print(); }, 500);
-        })
-        .catch(err => {
-            alert("Gagal simpan ke Google Sheets. Sila cetak manual.");
-            window.print();
-        });
+        .then(() => { btn.innerText = "✅ BERJAYA"; setTimeout(() => { window.print(); }, 500); })
+        .catch(() => { alert("Ralat simpan."); window.print(); });
     }
 </script>
-
 </body>
 </html>
