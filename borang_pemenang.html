@@ -2,153 +2,125 @@
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
-    <title>Borang Pemenang - SMKTD2</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Borang Pemenang SMKTD2</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; background: #f4f7f6; }
-        .container { max-width: 850px; margin: auto; background: white; padding: 40px; border: 2px solid #333; }
-        .no-print { background: #fff; padding: 20px; border-bottom: 2px solid #ddd; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .header { text-align: center; border-bottom: 4px double #333; padding-bottom: 15px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 2px solid #333 !important; padding: 12px; text-align: center; font-size: 15px; }
-        th { background: #eee; }
-        .btn-save { background: #27ae60; color: white; padding: 12px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
-        .team-list { font-size: 12px; font-weight: normal; display: block; margin-top: 5px; }
-        @media print { .no-print { display: none !important; } .container { border: 2px solid #000; } }
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f4f4f9; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #2c3e50; }
+        .form-group { margin-bottom: 15px; }
+        label { font-weight: bold; display: block; margin-bottom: 5px; }
+        select, input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        .winner-row { display: grid; grid-template-columns: 1fr 2fr 1fr 1fr; gap: 10px; margin-bottom: 10px; align-items: center; }
+        button { width: 100%; padding: 15px; background: #27ae60; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        button:hover { background: #219150; }
+        #loading { text-align: center; font-style: italic; color: #7f8c8d; }
+        .emcee-box { background: #fff3cd; border: 1px solid #ffeeba; padding: 15px; margin-top: 20px; border-radius: 5px; display: none; }
     </style>
 </head>
 <body>
 
-<div class="no-print">
-    <h3>URUS SETIA: PILIH PEMENANG</h3>
-    <div style="background:#eef2f3; padding:15px; border-radius:8px;">
-        <select id="selAcara" onchange="setupKategori()">
-            <option value="">-- Pilih Acara --</option>
-            <option value="70m">70m</option><option value="100m">100m</option>
-            <option value="4x100m">4x100m</option><option value="4x400m">4x400m</option>
-            <option value="Lompat Jauh">Lompat Jauh</option><option value="Lontar Peluru">Lontar Peluru</option>
-        </select>
-
-        <select id="selKat" onchange="filterAtlet()">
-            <option value="">-- Pilih Kategori --</option>
-        </select>
-        
-        <div id="pemenangArea" style="display:none; margin-top:15px;">
-            <p>🥇 Johan: <select id="win1" onchange="sync(1)"></select> Rekod: <input type="text" id="rec1" oninput="sync(1)"></p>
-            <p>🥈 Naib: <select id="win2" onchange="sync(2)"></select> Rekod: <input type="text" id="rec2" oninput="sync(2)"></p>
-            <p>🥉 Ke-3: <select id="win3" onchange="sync(3)"></select> Rekod: <input type="text" id="rec3" oninput="sync(3)"></p>
-            <button class="btn-save" id="btnSimpan" onclick="simpan()">💾 SIMPAN & CETAK</button>
-        </div>
-    </div>
-</div>
-
 <div class="container">
-    <div class="header">
-        <img src="lencana.jpg" alt="Logo" style="max-width:80px; margin-right:20px;">
-        <div>
-            <h1 style="margin:0; font-size:22px;">KEJOHANAN SUKAN TAHUNAN SMKTD2 2026</h1>
-            <h2 style="margin:5px 0; color:#c0392b;">BORANG PENGUMUMAN & MARKAH RASMI</h2>
+    <h2>🏆 BORANG PEMENANG & SKRIP EMCEE</h2>
+    <div id="loading">Memuat turun data atlet...</div>
+
+    <div class="form-group">
+        <label>Pilih Acara:</label>
+        <input type="text" id="namaAcara" placeholder="Contoh: 100M L1">
+    </div>
+
+    <div id="winner-inputs">
+        <div class="winner-row">
+            <span>1st</span>
+            <input type="text" id="p1_no" placeholder="No Badan" onchange="cariAtlet(1)">
+            <input type="text" id="p1_nama" readonly placeholder="Nama">
+            <input type="number" id="p1_mata" value="5">
+        </div>
+        <div class="winner-row">
+            <span>2nd</span>
+            <input type="text" id="p2_no" placeholder="No Badan" onchange="cariAtlet(2)">
+            <input type="text" id="p2_nama" readonly placeholder="Nama">
+            <input type="number" id="p2_mata" value="3">
+        </div>
+        <div class="winner-row">
+            <span>3rd</span>
+            <input type="text" id="p3_no" placeholder="No Badan" onchange="cariAtlet(3)">
+            <input type="text" id="p3_nama" readonly placeholder="Nama">
+            <input type="number" id="p3_mata" value="1">
         </div>
     </div>
 
-    <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:18px;">
-        <span>ACARA: <span id="dispAcara">..........</span></span>
-        <span>KATEGORI: <span id="dispKat">..........</span></span>
-    </div>
+    <button onclick="simpanKeputusan()">SIMPAN & JANA SKRIP</button>
 
-    <table>
-        <thead>
-            <tr>
-                <th width="15%">KEDUDUKAN</th>
-                <th width="12%">NO BADAN</th>
-                <th>NAMA PEMENANG / PASUKAN</th>
-                <th width="15%">RUMAH</th>
-                <th width="20%">KEPUTUSAN</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr style="height:60px;"><td>JOHAN</td><td id="b_no1"></td><td id="b_nama1"></td><td id="b_rumah1"></td><td id="b_rec1"></td></tr>
-            <tr style="height:60px;"><td>NAIB JOHAN</td><td id="b_no2"></td><td id="b_nama2"></td><td id="b_rumah2"></td><td id="b_rec2"></td></tr>
-            <tr style="height:60px;"><td>KETIGA</td><td id="b_no3"></td><td id="b_nama3"></td><td id="b_rumah3"></td><td id="b_rec3"></td></tr>
-        </tbody>
-    </table>
-
-    <p style="font-style:italic; border:1px solid #000; padding:10px; margin-top:20px;">
-        <strong>NOTA EMCEE:</strong> Umumkan pemenang dari tempat ke-3, Naib Johan, dan akhir sekali Johan.
-    </p>
-
-    <div style="display:flex; justify-content:space-between; margin-top:40px; text-align:center;">
-        <div><p>_______________________</p><strong>PENCATAT</strong></div>
-        <div><p>_______________________</p><strong>REFERI</strong></div>
+    <div id="emceeBox" class="emcee-box">
+        <strong>🎤 Skrip Pengumuman:</strong>
+        <p id="emceeScript"></p>
+        <button onclick="window.print()" style="background: #34495e;">CETAK SKRIP</button>
     </div>
 </div>
 
 <script>
     const scriptURL = 'https://script.google.com/macros/s/AKfycbzCl7YHhTZrR9calkir3fKiml518a3TPOLAktvtwffM1nBam2oaRhK1IodfzyVV6nuO/exec';
-    let dataAtlet = [];
-    let currentFiltered = {}; // Grouped by House/Name
+    let databaseAtlet = [];
 
-    window.onload = () => {
-        fetch(scriptURL).then(res => res.json()).then(res => {
-            dataAtlet = res.atlet;
-            document.getElementById('pemenangArea').previousElementSibling.innerText = '✅ Data Sedia';
-        });
+    window.onload = function() {
+        fetch(scriptURL)
+            .then(res => res.json())
+            .then(result => {
+                databaseAtlet = result.atlet; // AMBIL DARI result.atlet
+                document.getElementById('loading').style.display = 'none';
+            });
     };
 
-    function setupKategori() {
-        const acara = document.getElementById('selAcara').value;
-        const selKat = document.getElementById('selKat');
-        if (acara === "4x400m") {
-            selKat.innerHTML = '<option value="">-- Kategori --</option><option value="L_TERBUKA">LELAKI TERBUKA</option><option value="P_TERBUKA">PEREMPUAN TERBUKA</option>';
+    function cariAtlet(n) {
+        const no = document.getElementById(`p${n}_no`).value;
+        const atlet = databaseAtlet.find(a => a.NoBadan.toString() === no.toString());
+        if(atlet) {
+            document.getElementById(`p${n}_nama`).value = atlet.Nama + " (" + atlet.Rumah + ")";
         } else {
-            selKat.innerHTML = '<option value="">-- Kategori --</option><option value="L1">L1</option><option value="L2">L2</option><option value="L3">L3</option><option value="P1">P1</option><option value="P2">P2</option><option value="P3">P3</option>';
+            alert("No Badan tidak dijumpai!");
         }
     }
 
-    function filterAtlet() {
-        const acara = document.getElementById('selAcara').value;
-        const kat = document.getElementById('selKat').value;
-        if(!acara || !kat) return;
+    function simpanKeputusan() {
+        const acara = document.getElementById('namaAcara').value;
+        const pemenang = [];
+        
+        for(let i=1; i<=3; i++) {
+            const no = document.getElementById(`p${i}_no`).value;
+            const namaFull = document.getElementById(`p${i}_nama`).value;
+            if(no) {
+                pemenang.push({
+                    kedudukan: i,
+                    noBadan: no,
+                    nama: namaFull.split(' (')[0],
+                    rumah: namaFull.split('(')[1].replace(')', ''),
+                    mata: document.getElementById(`p${i}_mata`).value
+                });
+            }
+        }
 
-        document.getElementById('dispAcara').innerText = acara.toUpperCase();
-        document.getElementById('dispKat').innerText = kat.replace("_", " ");
+        if(!acara) return alert("Sila isi nama acara!");
 
-        let isTeam = acara.includes("4x");
-        let filtered = dataAtlet.filter(a => {
-            let k = (acara === "4x400m") ? (a.Jantina + "_TERBUKA") : (a.Jantina + (a.Kelas.charAt(0) == "1" || a.Kelas.charAt(0) == "2" ? "3" : a.Kelas.charAt(0) == "3" ? "2" : "1"));
-            return (a.AcaraIndividu.includes(acara) || a.AcaraBerpasukan.includes(acara)) && k == kat;
+        fetch(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'SIMPAN_MARKAH', acara: acara, pemenang: pemenang })
+        })
+        .then(() => {
+            alert("Data berjaya disimpan ke Google Sheets!");
+            janaSkrip(acara, pemenang);
         });
-
-        currentFiltered = {};
-        [1,2,3].forEach(n => document.getElementById('win' + n).innerHTML = '<option value="">-- Pilih --</option>');
-
-        filtered.forEach(a => {
-            let key = isTeam ? a.RumahSukan : a.NomborBadan;
-            if(!currentFiltered[key]) currentFiltered[key] = isTeam ? { name: a.RumahSukan, members: [] } : { name: a.NamaMurid, house: a.RumahSukan, id: a.NomborBadan };
-            if(isTeam) currentFiltered[key].members.push(a.NamaMurid);
-            
-            [1,2,3].forEach(n => {
-                document.getElementById('win' + n).innerHTML += `<option value="${key}">${isTeam ? a.RumahSukan : a.NamaMurid}</option>`;
-            });
-        });
-        document.getElementById('pemenangArea').style.display = 'block';
     }
 
-    function sync(n) {
-        const val = document.getElementById('win' + n).value;
-        const data = currentFiltered[val];
-        const isTeam = document.getElementById('selAcara').value.includes("4x");
-
-        document.getElementById('b_no' + n).innerText = isTeam ? '-' : (data ? data.id : '');
-        document.getElementById('b_nama' + n).innerHTML = data ? (isTeam ? `<strong>${data.name.toUpperCase()}</strong><span class="team-list">(${data.members.join(", ")})</span>` : data.name) : '';
-        document.getElementById('b_rumah' + n).innerText = data ? (isTeam ? data.name : data.house) : '';
-        document.getElementById('b_rec' + n).innerText = document.getElementById('rec' + n).value;
-    }
-
-    function simpan() {
-        // Logik simpan ke Markah Sheet (Guna action SIMPAN_MARKAH dalam code.gs)
-        alert("Data Markah dihantar ke Google Sheets!");
-        window.print();
+    function janaSkrip(acara, pemenang) {
+        let text = `Diumumkan keputusan bagi acara ${acara}. <br><br>`;
+        pemenang.reverse().forEach(p => {
+            text += `Tempat ke-${p.kedudukan} dimenangi oleh ${p.nama} dari rumah ${p.rumah}. <br>`;
+        });
+        document.getElementById('emceeScript').innerHTML = text;
+        document.getElementById('emceeBox').style.display = 'block';
     }
 </script>
+
 </body>
 </html>
