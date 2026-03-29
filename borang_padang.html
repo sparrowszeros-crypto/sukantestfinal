@@ -4,109 +4,87 @@
     <meta charset="UTF-8">
     <title>Borang Padang SMKTD2</title>
     <style>
-        body { font-family: 'Arial', sans-serif; padding: 20px; }
-        .no-print { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #dee2e6; }
-        select, input, button { padding: 10px; margin-right: 10px; border-radius: 5px; border: 1px solid #ccc; }
-        button { background: #28a745; color: white; cursor: pointer; border: none; font-weight: bold; }
+        body { font-family: Arial; padding: 20px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #000; padding: 8px; text-align: center; font-size: 14px; }
-        th { background: #f2f2f2; }
-        .header-print { text-align: center; display: none; }
-        @media print { 
-            .no-print { display: none; } 
-            .header-print { display: block; }
-            body { padding: 0; }
-        }
+        th, td { border: 1px solid black; padding: 8px; text-align: center; }
+        .no-print { background: #eee; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        @media print { .no-print { display: none; } }
     </style>
 </head>
 <body>
 
 <div class="no-print">
-    <h3>⚙️ Jana Borang Padang</h3>
-    <select id="selKat">
-        <option value="L">Lelaki (L)</option>
-        <option value="P">Perempuan (P)</option>
+    <h2>⚙️ JANA BORANG PADANG</h2>
+    <label>Pilih Acara Padang:</label>
+    <select id="pilihAcara" onchange="janaJadual()">
+        <option value="">-- Pilih Acara --</option>
     </select>
-    <select id="selKelas">
-        <option value="1">Kelas 1</option>
-        <option value="2">Kelas 2</option>
-    </select>
-    <input type="text" id="inpAcara" placeholder="Cth: Lompat Jauh">
-    <button onclick="janaBorang()">JANA SENARAI</button>
 </div>
 
 <div id="printArea">
-    <div class="header-print">
-        <h2>BORANG TEKNIKAL ACARA PADANG</h2>
-        <h3 id="txtJudul">-</h3>
-    </div>
+    <h2 style="text-align:center">BORANG KEPUTUSAN ACARA PADANG</h2>
+    <h3 id="txtAcara" style="text-align:center">-</h3>
     <table>
         <thead>
             <tr>
-                <th width="30">No</th>
-                <th width="80">No Badan</th>
+                <th>No</th>
+                <th>No Badan</th>
                 <th>Nama Peserta</th>
-                <th width="80">Rumah</th>
-                <th width="50">T1</th>
-                <th width="50">T2</th>
-                <th width="50">T3</th>
-                <th width="60">Terbaik</th>
-                <th width="40">Ked.</th>
+                <th>Rumah</th>
+                <th>T1</th><th>T2</th><th>T3</th>
+                <th>Terbaik</th><th>Ked.</th>
             </tr>
         </thead>
-        <tbody id="tableBody">
-            <tr><td colspan="9">Sila jana borang di atas.</td></tr>
-        </tbody>
+        <tbody id="isiJadual"></tbody>
     </table>
 </div>
 
 <script>
     const scriptURL = 'https://script.google.com/macros/s/AKfycbzCl7YHhTZrR9calkir3fKiml518a3TPOLAktvtwffM1nBam2oaRhK1IodfzyVV6nuO/exec';
-    let databaseAtlet = [];
+    let dataAtlet = [];
 
-    window.onload = function() {
+    window.onload = () => {
         fetch(scriptURL)
             .then(res => res.json())
             .then(result => {
-                databaseAtlet = result.atlet;
+                dataAtlet = result.atlet;
+                let acaraPadang = ["Lompat Jauh", "Lontar Peluru", "Lompat Tinggi", "Lontar Cakera"];
+                let dropdown = document.getElementById('pilihAcara');
+                
+                acaraPadang.forEach(aca => {
+                    ["L1", "L2", "P1", "P2"].forEach(kat => {
+                        let opt = document.createElement('option');
+                        opt.value = `${aca} ${kat}`;
+                        opt.text = `${aca} ${kat}`;
+                        dropdown.add(opt);
+                    });
+                });
             });
     };
 
-    function janaBorang() {
-        const jantina = document.getElementById('selKat').value;
-        const kelas = document.getElementById('selKelas').value;
-        const acara = document.getElementById('inpAcara').value;
-        
-        document.getElementById('txtJudul').innerText = `${acara.toUpperCase()} (${jantina}${kelas})`;
+    function janaJadual() {
+        let filter = document.getElementById('pilihAcara').value;
+        document.getElementById('txtAcara').innerText = filter;
 
-        // Tapis mengikut Jantina, Kelas, dan Acara
-        const filtered = databaseAtlet.filter(a => 
-            a.Jantina === jantina && 
-            a.Kelas.toString() === kelas && 
-            a.AcaraIndividu.includes(acara)
+        let [namaAcara, kategori] = filter.split(' ');
+        let senarai = dataAtlet.filter(a => 
+            a.AcaraIndividu.includes(namaAcara) && 
+            a.Jantina === kategori.charAt(0) && 
+            a.Kelas.toString() === kategori.charAt(1)
         );
 
-        const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '';
-
-        if(filtered.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9">Tiada atlet dijumpai untuk kriteria ini.</td></tr>';
-            return;
-        }
-
-        filtered.forEach((a, index) => {
-            tbody.innerHTML += `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td>${a.NomborBadan}</td>
-                    <td style="text-align:left">${a.NamaMurid}</td>
-                    <td>${a.RumahSukan}</td>
-                    <td></td><td></td><td></td><td></td><td></td>
-                </tr>
-            `;
+        let html = "";
+        senarai.forEach((a, i) => {
+            html += `<tr>
+                <td>${i+1}</td>
+                <td>${a.NomborBadan}</td>
+                <td style="text-align:left">${a.NamaMurid}</td>
+                <td>${a.RumahSukan}</td>
+                <td></td><td></td><td></td><td></td><td></td>
+            </tr>`;
         });
+        document.getElementById('isiJadual').innerHTML = html || '<tr><td colspan="9">Tiada data dijumpai</td></tr>';
     }
 </script>
-
 </body>
 </html>
