@@ -2,88 +2,213 @@
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
-    <title>Borang Padang SMKTD2</title>
+    <title>Borang Hakim Padang - SMKTD2</title>
     <style>
-        body { font-family: Arial; padding: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid black; padding: 8px; text-align: center; }
-        .no-print { background: #eee; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
-        @media print { .no-print { display: none; } }
+        body { font-family: Arial, sans-serif; padding: 10px; background: #f4f7f6; }
+        .no-print { background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .container { max-width: 950px; margin: auto; background: white; padding: 25px; border: 2px solid #000; }
+        
+        .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; position: relative; }
+        .header img { position: absolute; left: 10px; top: 0; max-width: 75px; }
+        .header h2 { margin: 0; font-size: 20px; text-transform: uppercase; }
+        .header p { margin: 5px 0; font-weight: bold; font-size: 16px; }
+
+        .info-table { width: 100%; margin-bottom: 15px; border: none; }
+        .info-table td { border: none; padding: 5px; font-weight: bold; font-size: 14px; }
+        .box { border: 2px solid #000; padding: 4px 12px; display: inline-block; min-width: 40px; text-align: center; margin: 0 2px; }
+        .highlight { background-color: #000 !important; color: #fff !important; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 2px solid #000; padding: 10px; text-align: center; }
+        th { background: #eee; font-size: 12px; text-transform: uppercase; }
+        
+        .nama-peserta { text-align: left; padding-left: 10px; font-size: 13px; font-weight: bold; }
+        .trial-box { height: 40px; }
+        
+        .footer { margin-top: 40px; display: flex; justify-content: space-between; font-weight: bold; }
+        .note { font-size: 11px; margin-top: 15px; font-style: italic; }
+        
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; padding: 0; }
+            .container { border: 2px solid #000; width: 100%; box-shadow: none; }
+        }
+
+        select, button { padding: 12px; font-size: 14px; margin: 5px; border-radius: 6px; border: 1px solid #ccc; cursor: pointer; }
+        .btn-jana { background: #27ae60; color: white; border: none; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="no-print">
-    <h2>⚙️ JANA BORANG PADANG</h2>
-    <label>Pilih Acara Padang:</label>
-    <select id="pilihAcara" onchange="janaJadual()">
-        <option value="">-- Pilih Acara --</option>
+    <h3>⚙️ PANEL JANA BORANG ACARA PADANG</h3>
+    <p id="dataStatus" style="color: #e67e22; font-weight: bold;">⏳ Memuatkan data atlet...</p>
+    
+    <select id="selAcara">
+        <option value="Lontar Peluru">LONTAR PELURU</option>
+        <option value="Lompat Jauh">LOMPAT JAUH</option>
+        <option value="Lompat Tinggi">LOMPAT TINGGI</option>
+        <option value="Lontar Cakera">LONTAR CAKERA</option>
     </select>
+    
+    <select id="selKat">
+        <option value="L1">L1 (Ting 4-5)</option>
+        <option value="L2">L2 (Ting 3)</option>
+        <option value="L3">L3 (Ting 1-2)</option>
+        <option value="P1">P1 (Ting 4-5)</option>
+        <option value="P2">P2 (Ting 3)</option>
+        <option value="P3">P3 (Ting 1-2)</option>
+    </select>
+    
+    <button class="btn-jana" onclick="janaBorang()">JANA & PAPAR</button>
+    <button onclick="window.print()" style="background:#2c3e50; color:white;">CETAK BORANG</button>
 </div>
 
-<div id="printArea">
-    <h2 style="text-align:center">BORANG KEPUTUSAN ACARA PADANG</h2>
-    <h3 id="txtAcara" style="text-align:center">-</h3>
+<div class="container">
+    <div class="header">
+        <img src="lencana.jpg" alt="Logo SMKTD2">
+        <h2>KEJOHANAN SUKAN OLAHRAGA KALI KE-16</h2>
+        <p>SMK TAMAN DESA 2</p>
+    </div>
+
+    <table class="info-table">
+        <tr>
+            <td width="15%">ACARA</td>
+            <td width="40%">: <span class="box" style="min-width: 150px;" id="dispAcara"></span></td>
+            <td width="10%">KELAS</td>
+            <td>: 
+                <span class="box" id="boxK1">1</span> 
+                <span class="box" id="boxK2">2</span> 
+                <span class="box" id="boxK3">3</span>
+                <small style="font-weight: normal; margin-left: 5px;">(Bulatkan)</small>
+            </td>
+        </tr>
+        <tr>
+            <td>JANTINA</td>
+            <td>: <span class="box" id="boxL">L</span> <span class="box" id="boxP">P</span></td>
+            <td>KATEGORI</td>
+            <td>: <span id="dispFullKat" style="border-bottom: 1px dashed #000; min-width: 100px; display: inline-block;"></span></td>
+        </tr>
+    </table>
+
     <table>
         <thead>
             <tr>
-                <th>No</th>
-                <th>No Badan</th>
-                <th>Nama Peserta</th>
-                <th>Rumah</th>
-                <th>T1</th><th>T2</th><th>T3</th>
-                <th>Terbaik</th><th>Ked.</th>
+                <th rowspan="2" width="40">BIL</th>
+                <th rowspan="2">NAMA PESERTA</th>
+                <th rowspan="2" width="120">RUMAH SUKAN</th>
+                <th colspan="3">JARAK / KETINGGIAN</th>
+                <th rowspan="2" width="85">TERBAIK</th>
+                <th rowspan="2" width="85">KEDUDUKAN</th>
+                <th rowspan="2" width="70">MATA</th>
+            </tr>
+            <tr>
+                <th width="75">1</th>
+                <th width="75">2</th>
+                <th width="75">3</th>
             </tr>
         </thead>
-        <tbody id="isiJadual"></tbody>
+        <tbody id="atletRows">
+            </tbody>
     </table>
+
+    <div class="footer">
+        <div>
+            <p>NAMA PENCATAT : _________________________________</p>
+        </div>
+        <div>
+            <p>TANDATANGAN : __________________</p>
+        </div>
+    </div>
+    
+    <div class="note">
+        * Catatkan jarak lompatan / lontaran bagi yang tidak batal dan tanda ( X ) bagi cubaan yang batal.
+    </div>
 </div>
 
 <script>
+    // URL Web App GAS Cikgu yang terkini
     const scriptURL = 'https://script.google.com/macros/s/AKfycbzCl7YHhTZrR9calkir3fKiml518a3TPOLAktvtwffM1nBam2oaRhK1IodfzyVV6nuO/exec';
-    let dataAtlet = [];
+    let dataSemua = [];
 
     window.onload = () => {
         fetch(scriptURL)
-            .then(res => res.json())
-            .then(result => {
-                dataAtlet = result.atlet;
-                let acaraPadang = ["Lompat Jauh", "Lontar Peluru", "Lompat Tinggi", "Lontar Cakera"];
-                let dropdown = document.getElementById('pilihAcara');
-                
-                acaraPadang.forEach(aca => {
-                    ["L1", "L2", "P1", "P2"].forEach(kat => {
-                        let opt = document.createElement('option');
-                        opt.value = `${aca} ${kat}`;
-                        opt.text = `${aca} ${kat}`;
-                        dropdown.add(opt);
-                    });
-                });
-            });
+        .then(res => res.json())
+        .then(res => {
+            dataSemua = res.atlet; // Pastikan ambil dari 'atlet'
+            document.getElementById('dataStatus').innerText = '✅ Data Berjaya Dimuatkan';
+            setTimeout(() => { document.getElementById('dataStatus').style.display = 'none'; }, 2000);
+        })
+        .catch(err => {
+            document.getElementById('dataStatus').innerText = '❌ Ralat memuat data!';
+        });
     };
 
-    function janaJadual() {
-        let filter = document.getElementById('pilihAcara').value;
-        document.getElementById('txtAcara').innerText = filter;
+    function janaBorang() {
+        const acara = document.getElementById('selAcara').value;
+        const kat = document.getElementById('selKat').value;
+        
+        document.getElementById('dispAcara').innerText = acara.toUpperCase();
+        document.getElementById('dispFullKat').innerText = kat;
 
-        let [namaAcara, kategori] = filter.split(' ');
-        let senarai = dataAtlet.filter(a => 
-            a.AcaraIndividu.includes(namaAcara) && 
-            a.Jantina === kategori.charAt(0) && 
-            a.Kelas.toString() === kategori.charAt(1)
-        );
-
-        let html = "";
-        senarai.forEach((a, i) => {
-            html += `<tr>
-                <td>${i+1}</td>
-                <td>${a.NomborBadan}</td>
-                <td style="text-align:left">${a.NamaMurid}</td>
-                <td>${a.RumahSukan}</td>
-                <td></td><td></td><td></td><td></td><td></td>
-            </tr>`;
+        // Reset semua kotak highlight
+        ["boxK1", "boxK2", "boxK3", "boxL", "boxP"].forEach(id => {
+            document.getElementById(id).classList.remove('highlight');
         });
-        document.getElementById('isiJadual').innerHTML = html || '<tr><td colspan="9">Tiada data dijumpai</td></tr>';
+
+        // Logik Highlight (L1, P3, dll)
+        if(kat.includes('1')) document.getElementById('boxK1').classList.add('highlight');
+        if(kat.includes('2')) document.getElementById('boxK2').classList.add('highlight');
+        if(kat.includes('3')) document.getElementById('boxK3').classList.add('highlight');
+        if(kat.includes('L')) document.getElementById('boxL').classList.add('highlight');
+        if(kat.includes('P')) document.getElementById('boxP').classList.add('highlight');
+
+        const tbody = document.getElementById('atletRows');
+        tbody.innerHTML = '';
+
+        // Tapis atlet mengikut acara dan kategori (L1/L2/L3)
+        let senarai = dataSemua.filter(a => {
+            let ting = a.Kelas.toString().charAt(0);
+            let k = "";
+            if(ting == "1" || ting == "2") k = a.Jantina + "3";
+            else if(ting == "3") k = a.Jantina + "2";
+            else if(ting == "4" || ting == "5") k = a.Jantina + "1";
+            
+            return a.AcaraIndividu.includes(acara) && k == kat;
+        });
+
+        // Masukkan data atlet ke dalam jadual
+        senarai.forEach((m, i) => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td class="nama-peserta">${m.NamaMurid.toUpperCase()}</td>
+                    <td>${m.RumahSukan.toUpperCase()}</td>
+                    <td class="trial-box"></td>
+                    <td class="trial-box"></td>
+                    <td class="trial-box"></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>`;
+        });
+
+        // Tambah baris kosong (Filler) supaya borang nampak profesional (sehingga 12 baris)
+        let barisSediaAda = senarai.length;
+        for(let j = barisSediaAda; j < 12; j++) {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${j + 1}</td>
+                    <td></td>
+                    <td></td>
+                    <td class="trial-box"></td>
+                    <td class="trial-box"></td>
+                    <td class="trial-box"></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>`;
+        }
     }
 </script>
 </body>
