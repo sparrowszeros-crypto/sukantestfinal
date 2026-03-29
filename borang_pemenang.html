@@ -5,7 +5,7 @@
     <title>Borang Keputusan Rasmi - SMKTD2</title>
     <style>
         body { font-family: sans-serif; padding: 20px; background: #f4f7f6; }
-        .container { max-width: 850px; margin: auto; background: white; padding: 40px; border: 2px solid #333; position: relative; }
+        .container { max-width: 850px; margin: auto; background: white; padding: 40px; border: 2px solid #333; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
         .no-print { background: #fff; padding: 20px; border-bottom: 2px solid #ddd; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         
         .header { text-align: center; border-bottom: 4px double #333; padding-bottom: 15px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; }
@@ -18,31 +18,37 @@
         .winner-row { height: 50px; font-weight: bold; }
         .signature-grid { display: flex; justify-content: space-between; margin-top: 50px; }
         
-        select, input { padding: 8px; margin: 5px; border-radius: 4px; border: 1px solid #ccc; }
+        select, input { padding: 8px; margin: 5px; border-radius: 4px; border: 1px solid #ccc; font-size: 14px; }
         .selection-box { background: #eef2f3; padding: 15px; border-radius: 8px; margin-top: 10px; }
+        .btn-save { background: #27ae60; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
 
         @media print {
             .no-print { display: none !important; }
             body { background: white; padding: 0; }
-            .container { box-shadow: none; border: 2px solid #000; }
+            .container { box-shadow: none; border: 2px solid #000; width: 100%; }
         }
     </style>
 </head>
 <body>
 
 <div class="no-print">
-    <h3>PANEL URUS SETIA: PILIH PEMENANG</h3>
+    <h3>⚙️ PANEL URUS SETIA: PROSES KEPUTUSAN</h3>
     <div class="selection-box">
+        <label>1. Pilih Acara:</label>
         <select id="selAcara" onchange="filterAtlet()">
             <option value="">-- Pilih Acara --</option>
-            <option value="70m">70m</option>
             <option value="100m">100m</option>
+            <option value="200m">200m</option>
             <option value="400m">400m</option>
+            <option value="4x100m">4x100m</option>
             <option value="Lompat Jauh">Lompat Jauh</option>
             <option value="Lontar Peluru">Lontar Peluru</option>
+            <option value="Lompat Tinggi">Lompat Tinggi</option>
         </select>
 
+        <label>2. Pilih Kategori:</label>
         <select id="selKat" onchange="filterAtlet()">
+            <option value="">-- Pilih Kategori --</option>
             <option value="L1">L1 (Ting 4-5)</option>
             <option value="L2">L2 (Ting 3)</option>
             <option value="L3">L3 (Ting 1-2)</option>
@@ -50,38 +56,39 @@
             <option value="P2">P2 (Ting 3)</option>
             <option value="P3">P3 (Ting 1-2)</option>
         </select>
-        <span id="status">Memuat data...</span>
+        
+        <span id="status" style="margin-left:15px; font-weight:bold; color:#e67e22;">Memuat data...</span>
         
         <hr>
 
         <div id="pemenangSelectors" style="display:none;">
-            <p><strong>Johan:</strong> 
+            <p>🥇 <strong>Johan:</strong> 
                 <select id="win1" onchange="updateBorang(1)"></select> 
                 Masa/Jarak: <input type="text" id="record1" oninput="syncRecord(1)">
             </p>
-            <p><strong>Naib Johan:</strong> 
+            <p>🥈 <strong>Naib Johan:</strong> 
                 <select id="win2" onchange="updateBorang(2)"></select> 
                 Masa/Jarak: <input type="text" id="record2" oninput="syncRecord(2)">
             </p>
-            <p><strong>Ketiga:</strong> 
+            <p>🥉 <strong>Ketiga:</strong> 
                 <select id="win3" onchange="updateBorang(3)"></select> 
                 Masa/Jarak: <input type="text" id="record3" oninput="syncRecord(3)">
             </p>
+            <button class="btn-save" id="btnSimpan" onclick="simpanDanCetak()">💾 SIMPAN & CETAK</button>
         </div>
     </div>
-    <button onclick="window.print()" style="margin-top:10px; padding:10px 20px; background:#2c3e50; color:white; cursor:pointer;">CETAK BORANG RASMI</button>
 </div>
 
-<div class="container">
+<div class="container" id="printableArea">
     <div class="header">
-        <img src="lencana.jpg" alt="Lencana SMKTD2">
+        <img src="lencana.jpg" alt="Lencana Sekolah">
         <div>
             <h1 style="margin:0; font-size:22px;">KEJOHANAN SUKAN TAHUNAN SMKTD2 2026</h1>
             <h2 style="margin:5px 0; color:#c0392b;">BORANG KEPUTUSAN & PENGUMUMAN RASMI</h2>
         </div>
     </div>
 
-    <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 18px;">
+    <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 18px; margin-bottom: 10px;">
         <span>ACARA: <span id="dispAcara">..........</span></span>
         <span>KATEGORI: <span id="dispKat">..........</span></span>
     </div>
@@ -112,7 +119,7 @@
         </tbody>
     </table>
 
-    <div style="margin-top:20px; font-style:italic; border:1px solid #333; padding:10px;">
+    <div style="margin-top:20px; font-style:italic; border:1px solid #333; padding:10px; font-size: 14px;">
         <strong>NOTA EMCEE:</strong> Sila umumkan pemenang mengikut turutan tempat ketiga, kedua, dan Johan.
     </div>
 
@@ -133,11 +140,16 @@
     let dataSemuaAtlet = [];
     let atletTapis = [];
 
-    // Ambil data dari Google Sheet sebaik sahaja page dibuka
     window.onload = () => {
-        fetch(scriptURL).then(res => res.json()).then(res => {
-            dataSemuaAtlet = res.atlet;
-            document.getElementById('status').innerText = '✅ Data Sedia.';
+        fetch(scriptURL)
+        .then(res => res.json())
+        .then(res => {
+            dataSemuaAtlet = res.atlet; // Masuk ke dalam laci 'atlet'
+            document.getElementById('status').innerText = '✅ Data Berjaya Ditarik.';
+            setTimeout(() => { document.getElementById('status').style.display = 'none'; }, 3000);
+        })
+        .catch(err => {
+            document.getElementById('status').innerText = '❌ Ralat Internet!';
         });
     };
 
@@ -150,9 +162,9 @@
         document.getElementById('dispAcara').innerText = acara.toUpperCase();
         document.getElementById('dispKat').innerText = kat;
 
-        // Tapis atlet mengikut acara dan kategori L1/P1 dll
         atletTapis = dataSemuaAtlet.filter(a => {
-            let ting = a.Kelas.charAt(0);
+            // Logika penentuan kategori berdasarkan kelas (Contoh: Ting 1-2 = Kelas 3)
+            let ting = a.Kelas.toString().charAt(0);
             let katM = "";
             if(ting == "1" || ting == "2") katM = a.Jantina + "3";
             else if(ting == "3") katM = a.Jantina + "2";
@@ -161,12 +173,11 @@
             return (a.AcaraIndividu.includes(acara) || a.AcaraBerpasukan.includes(acara)) && katM == kat;
         });
 
-        // Masukkan nama dalam dropdown pemenang
         [1, 2, 3].forEach(n => {
             const sel = document.getElementById('win' + n);
             sel.innerHTML = '<option value="">-- Pilih Nama --</option>';
             atletTapis.forEach(a => {
-                sel.innerHTML += `<option value="${a.NomborBadan}">${a.NamaMurid}</option>`;
+                sel.innerHTML += `<option value="${a.NomborBadan}">${a.NomborBadan} - ${a.NamaMurid}</option>`;
             });
         });
 
@@ -190,6 +201,50 @@
 
     function syncRecord(n) {
         document.getElementById('b_rec' + n).innerText = document.getElementById('record' + n).value;
+    }
+
+    function simpanDanCetak() {
+        const acara = document.getElementById('selAcara').value;
+        const kat = document.getElementById('selKat').value;
+        const btn = document.getElementById('btnSimpan');
+        
+        let pemenang = [];
+        for(let i=1; i<=3; i++) {
+            const no = document.getElementById('b_no' + i).innerText;
+            if(no) {
+                pemenang.push({
+                    kedudukan: i,
+                    noBadan: no,
+                    nama: document.getElementById('b_nama' + i).innerText,
+                    rumah: document.getElementById('b_rumah' + i).innerText,
+                    rekod: document.getElementById('b_rec' + i).innerText,
+                    mata: (i==1 ? 5 : (i==2 ? 3 : 1))
+                });
+            }
+        }
+
+        if(pemenang.length === 0) return alert("Sila pilih sekurang-kurangnya satu pemenang!");
+
+        btn.innerText = "⌛ Menyimpan...";
+        btn.disabled = true;
+
+        fetch(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'SIMPAN_MARKAH',
+                acara: acara,
+                kategori: kat,
+                pemenang: pemenang
+            })
+        })
+        .then(() => {
+            btn.innerText = "✅ BERJAYA";
+            setTimeout(() => { window.print(); }, 500);
+        })
+        .catch(err => {
+            alert("Gagal simpan ke Google Sheets. Sila cetak manual.");
+            window.print();
+        });
     }
 </script>
 
