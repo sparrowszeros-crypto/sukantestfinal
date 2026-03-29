@@ -2,148 +2,103 @@
 <html lang="ms">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pemenang SMKTD2 2026</title>
+    <title>Borang Pemenang SMKTD2</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; padding: 15px; background: #f0f2f5; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #1a73e8; margin-bottom: 25px; }
-        .form-group { margin-bottom: 20px; }
-        label { font-weight: bold; display: block; margin-bottom: 8px; color: #3c4043; }
-        input { width: 100%; padding: 12px; border: 1px solid #dadce0; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        .winner-row { display: grid; grid-template-columns: 50px 100px 1fr 60px; gap: 10px; margin-bottom: 12px; align-items: center; }
-        .rank { font-weight: bold; color: #5f6368; }
-        button { width: 100%; padding: 15px; background: #1a73e8; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; }
-        button:hover { background: #1765cc; }
-        #loading { text-align: center; color: #70757a; font-size: 14px; margin-bottom: 15px; }
-        .emcee-box { background: #fff4e5; border-left: 5px solid #ff9800; padding: 15px; margin-top: 25px; border-radius: 4px; display: none; }
-        .emcee-box p { font-size: 15px; line-height: 1.6; color: #3c4043; }
+        body { font-family: 'Segoe UI', sans-serif; padding: 20px; background: #f4f7f6; }
+        .box { max-width: 700px; margin: auto; background: white; padding: 30px; border-radius: 15px; shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #2c3e50; }
+        select, button { width: 100%; padding: 12px; margin-top: 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 16px; }
+        button { background: #27ae60; color: white; font-weight: bold; border: none; cursor: pointer; margin-top: 20px; }
+        .pemenang-card { background: #f9f9f9; padding: 15px; border-radius: 10px; margin-top: 15px; border-left: 5px solid #27ae60; }
+        #loading { text-align: center; color: orange; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>🏆 KEPUTUSAN PEMENANG</h2>
-    <div id="loading">📡 Menghubung ke Google Sheets...</div>
+<div class="box">
+    <h2>🏆 KEPUTUSAN ACARA</h2>
+    <div id="loading">Memuat data dari Google Sheets...</div>
 
-    <div class="form-group">
-        <label>Nama Acara:</label>
-        <input type="text" id="namaAcara" placeholder="Cth: 100M L1 atau Lompat Jauh P2">
-    </div>
+    <label>1. Pilih Acara:</label>
+    <select id="pilihAcara" onchange="tapisAtlet()">
+        <option value="">-- Sila Pilih Acara --</option>
+    </select>
 
-    <div id="winner-inputs">
-        <div class="winner-row">
-            <span class="rank">1st</span>
-            <input type="text" id="p1_no" placeholder="No" onchange="cariAtlet(1)">
-            <input type="text" id="p1_nama" readonly placeholder="Nama & Rumah">
-            <input type="number" id="p1_mata" value="5">
+    <div id="bahagianPemenang" style="display:none;">
+        <div class="pemenang-card">
+            <label>🥇 TEMPAT PERTAMA:</label>
+            <select id="pemenang1"></select>
         </div>
-        <div class="winner-row">
-            <span class="rank">2nd</span>
-            <input type="text" id="p2_no" placeholder="No" onchange="cariAtlet(2)">
-            <input type="text" id="p2_nama" readonly placeholder="Nama & Rumah">
-            <input type="number" id="p2_mata" value="3">
+        <div class="pemenang-card">
+            <label>🥈 TEMPAT KEDUA:</label>
+            <select id="pemenang2"></select>
         </div>
-        <div class="winner-row">
-            <span class="rank">3rd</span>
-            <input type="text" id="p3_no" placeholder="No" onchange="cariAtlet(3)">
-            <input type="text" id="p3_nama" readonly placeholder="Nama & Rumah">
-            <input type="number" id="p3_mata" value="1">
+        <div class="pemenang-card">
+            <label>🥉 TEMPAT KETIGA:</label>
+            <select id="pemenang3"></select>
         </div>
-    </div>
-
-    <button id="btnSimpan" onclick="simpanKeputusan()">SIMPAN & JANA SKRIP</button>
-
-    <div id="emceeBox" class="emcee-box">
-        <strong>🎤 Skrip Emcee:</strong>
-        <p id="emceeScript"></p>
-        <button onclick="window.print()" style="background: #5f6368; margin-top: 10px;">CETAK SKRIP</button>
+        <button onclick="simpanData()">SIMPAN KEPUTUSAN</button>
     </div>
 </div>
 
 <script>
     const scriptURL = 'https://script.google.com/macros/s/AKfycbzCl7YHhTZrR9calkir3fKiml518a3TPOLAktvtwffM1nBam2oaRhK1IodfzyVV6nuO/exec';
-    let databaseAtlet = [];
+    let database = [];
 
-    // Ambil data atlet semasa buka page
-    window.onload = function() {
+    window.onload = () => {
         fetch(scriptURL)
             .then(res => res.json())
             .then(result => {
-                databaseAtlet = result.atlet; // Ambil sub-pakej atlet
-                document.getElementById('loading').innerText = "✅ Data sedia digunakan.";
-                setTimeout(() => document.getElementById('loading').style.display = 'none', 2000);
-            })
-            .catch(err => {
-                document.getElementById('loading').innerText = "❌ Gagal memuat data. Sila refresh.";
+                database = result.atlet; // Ambil data atlet
+                document.getElementById('loading').style.display = 'none';
+                
+                // Ambil senarai unik acara untuk dropdown
+                let acaraUnik = [...new Set(database.map(a => a.AcaraIndividu))].filter(x => x);
+                let dropdown = document.getElementById('pilihAcara');
+                acaraUnik.forEach(a => {
+                    let opt = document.createElement('option');
+                    opt.value = a; opt.text = a;
+                    dropdown.add(opt);
+                });
             });
     };
 
-    function cariAtlet(n) {
-        const no = document.getElementById(`p${n}_no`).value;
-        // Guna NomborBadan mengikut header sheet Cikgu
-        const atlet = databaseAtlet.find(a => a.NomborBadan.toString() === no.toString());
+    function tapisAtlet() {
+        let acaraSelected = document.getElementById('pilihAcara').value;
+        if(!acaraSelected) return;
+
+        let senaraiNama = database.filter(a => a.AcaraIndividu.includes(acaraSelected));
         
-        if(atlet) {
-            document.getElementById(`p${n}_nama`).value = `${atlet.NamaMurid} (${atlet.RumahSukan})`;
-        } else if(no !== "") {
-            alert("No Badan " + no + " tidak dijumpai!");
-            document.getElementById(`p${n}_nama`).value = "";
-        }
+        ['pemenang1', 'pemenang2', 'pemenang3'].forEach(id => {
+            let sel = document.getElementById(id);
+            sel.innerHTML = '<option value="">-- Pilih Nama Atlet --</option>';
+            senaraiNama.forEach(atlet => {
+                let opt = document.createElement('option');
+                opt.value = JSON.stringify(atlet);
+                opt.text = `${atlet.NomborBadan} - ${atlet.NamaMurid} (${atlet.RumahSukan})`;
+                sel.add(opt);
+            });
+        });
+        document.getElementById('bahagianPemenang').style.display = 'block';
     }
 
-    function simpanKeputusan() {
-        const acara = document.getElementById('namaAcara').value;
-        const pemenang = [];
-        const btn = document.getElementById('btnSimpan');
+    function simpanData() {
+        let acara = document.getElementById('pilihAcara').value;
+        let p1 = JSON.parse(document.getElementById('pemenang1').value || '{}');
+        let p2 = JSON.parse(document.getElementById('pemenang2').value || '{}');
+        let p3 = JSON.parse(document.getElementById('pemenang3').value || '{}');
 
-        if(!acara) return alert("Sila isi nama acara!");
-
-        btn.innerText = "Sedang Menyimpan...";
-        btn.disabled = true;
-
-        for(let i=1; i<=3; i++) {
-            const no = document.getElementById(`p${i}_no`).value;
-            const namaFull = document.getElementById(`p${i}_nama`).value;
-            if(no && namaFull) {
-                pemenang.push({
-                    kedudukan: i,
-                    noBadan: no,
-                    nama: namaFull.split(' (')[0],
-                    rumah: namaFull.split('(')[1].replace(')', ''),
-                    mata: document.getElementById(`p${i}_mata`).value
-                });
-            }
-        }
+        let dataPemenang = [
+            { kedudukan: 1, noBadan: p1.NomborBadan, nama: p1.NamaMurid, rumah: p1.RumahSukan, mata: 5 },
+            { kedudukan: 2, noBadan: p2.NomborBadan, nama: p2.NamaMurid, rumah: p2.RumahSukan, mata: 3 },
+            { kedudukan: 3, noBadan: p3.NomborBadan, nama: p3.NamaMurid, rumah: p3.RumahSukan, mata: 1 }
+        ].filter(p => p.noBadan);
 
         fetch(scriptURL, {
             method: 'POST',
-            body: JSON.stringify({ action: 'SIMPAN_MARKAH', acara: acara, pemenang: pemenang })
-        })
-        .then(() => {
-            alert("Berjaya! Markah telah dikemaskini dalam Spreadsheet.");
-            btn.innerText = "SIMPAN & JANA SKRIP";
-            btn.disabled = false;
-            janaSkrip(acara, pemenang);
-        })
-        .catch(err => {
-            alert("Ralat simpan: " + err);
-            btn.disabled = false;
-        });
-    }
-
-    function janaSkrip(acara, pemenang) {
-        let text = `Perhatian sebentar, berikut adalah keputusan rasmi bagi acara <b>${acara}</b>:<br><br>`;
-        // Susun dari tempat ke-3 ke tempat ke-1 untuk suspen
-        const sorted = [...pemenang].sort((a,b) => b.kedudukan - a.kedudukan);
-        sorted.forEach(p => {
-            text += `Tempat ke-${p.kedudukan} dimenangi oleh <b>${p.nama}</b> dari rumah <b>${p.rumah}</b>.<br>`;
-        });
-        text += `<br>Tahniah diucapkan kepada semua pemenang!`;
-        document.getElementById('emceeScript').innerHTML = text;
-        document.getElementById('emceeBox').style.display = 'block';
+            body: JSON.stringify({ action: 'SIMPAN_MARKAH', acara: acara, pemenang: dataPemenang })
+        }).then(() => alert("Berjaya disimpan!"));
     }
 </script>
-
 </body>
 </html>
