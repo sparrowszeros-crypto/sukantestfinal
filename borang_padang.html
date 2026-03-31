@@ -6,7 +6,7 @@
     <style>
         body { font-family: Arial, sans-serif; padding: 10px; background: #f4f7f6; }
         .no-print { background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .container { max-width: 950px; margin: auto; background: white; padding: 25px; border: 2px solid #000; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 25px; border: 2px solid #000; }
         
         .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; position: relative; }
         .header img { position: absolute; left: 10px; top: 0; max-width: 75px; }
@@ -19,11 +19,11 @@
         .highlight { background-color: #000 !important; color: #fff !important; }
 
         table { width: 100%; border-collapse: collapse; }
-        th, td { border: 2px solid #000; padding: 10px; text-align: center; }
-        th { background: #eee; font-size: 12px; text-transform: uppercase; }
+        th, td { border: 2px solid #000; padding: 8px; text-align: center; }
+        th { background: #eee; font-size: 11px; text-transform: uppercase; }
         
-        .nama-peserta { text-align: left; padding-left: 10px; font-size: 13px; font-weight: bold; }
-        .trial-box { height: 40px; }
+        .nama-peserta { text-align: left; padding-left: 10px; font-size: 12px; font-weight: bold; }
+        .trial-box { height: 35px; min-width: 30px; }
         
         .footer { margin-top: 40px; display: flex; justify-content: space-between; font-weight: bold; }
         .note { font-size: 11px; margin-top: 15px; font-style: italic; }
@@ -32,6 +32,7 @@
             .no-print { display: none !important; }
             body { background: white; padding: 0; }
             .container { border: 2px solid #000; width: 100%; box-shadow: none; }
+            th { background: #eee !important; -webkit-print-color-adjust: exact; }
         }
 
         select, button { padding: 12px; font-size: 14px; margin: 5px; border-radius: 6px; border: 1px solid #ccc; cursor: pointer; }
@@ -45,8 +46,8 @@
     <p id="dataStatus" style="color: #e67e22; font-weight: bold;">⏳ Memuatkan data atlet...</p>
     
     <select id="selAcara">
-        <option value="Lontar Peluru">LONTAR PELURU</option>
         <option value="Lompat Jauh">LOMPAT JAUH</option>
+        <option value="Lontar Peluru">LONTAR PELURU</option>
         <option value="Lompat Tinggi">LOMPAT TINGGI</option>
         <option value="Lontar Cakera">LONTAR CAKERA</option>
     </select>
@@ -91,56 +92,30 @@
         </tr>
     </table>
 
-    <table>
-        <thead>
-            <tr>
-                <th rowspan="2" width="40">BIL</th>
-                <th rowspan="2">NAMA PESERTA</th>
-                <th rowspan="2" width="120">RUMAH SUKAN</th>
-                <th colspan="3">JARAK / KETINGGIAN</th>
-                <th rowspan="2" width="85">TERBAIK</th>
-                <th rowspan="2" width="85">KEDUDUKAN</th>
-                <th rowspan="2" width="70">MATA</th>
-            </tr>
-            <tr>
-                <th width="75">1</th>
-                <th width="75">2</th>
-                <th width="75">3</th>
-            </tr>
-        </thead>
+    <table id="mainTable">
+        <thead id="tableHead">
+            </thead>
         <tbody id="atletRows">
             </tbody>
     </table>
 
     <div class="footer">
-        <div>
-            <p>NAMA PENCATAT : _________________________________</p>
-        </div>
-        <div>
-            <p>TANDATANGAN : __________________</p>
-        </div>
+        <div><p>NAMA PENCATAT : _________________________________</p></div>
+        <div><p>TANDATANGAN : __________________</p></div>
     </div>
     
-    <div class="note">
-        * Catatkan jarak lompatan / lontaran bagi yang tidak batal dan tanda ( X ) bagi cubaan yang batal.
-    </div>
+    <div id="noteArea" class="note"></div>
 </div>
 
 <script>
-    // URL Web App GAS Cikgu yang terkini
     const scriptURL = 'https://script.google.com/macros/s/AKfycbzCl7YHhTZrR9calkir3fKiml518a3TPOLAktvtwffM1nBam2oaRhK1IodfzyVV6nuO/exec';
     let dataSemua = [];
 
     window.onload = () => {
-        fetch(scriptURL)
-        .then(res => res.json())
-        .then(res => {
-            dataSemua = res.atlet; // Pastikan ambil dari 'atlet'
+        fetch(scriptURL).then(res => res.json()).then(res => {
+            dataSemua = res.atlet;
             document.getElementById('dataStatus').innerText = '✅ Data Berjaya Dimuatkan';
             setTimeout(() => { document.getElementById('dataStatus').style.display = 'none'; }, 2000);
-        })
-        .catch(err => {
-            document.getElementById('dataStatus').innerText = '❌ Ralat memuat data!';
         });
     };
 
@@ -151,12 +126,44 @@
         document.getElementById('dispAcara').innerText = acara.toUpperCase();
         document.getElementById('dispFullKat').innerText = kat;
 
-        // Reset semua kotak highlight
-        ["boxK1", "boxK2", "boxK3", "boxL", "boxP"].forEach(id => {
-            document.getElementById(id).classList.remove('highlight');
-        });
+        // Update Header & Layout
+        const thead = document.getElementById('tableHead');
+        const noteArea = document.getElementById('noteArea');
+        
+        if(acara === "Lompat Tinggi") {
+            thead.innerHTML = `
+                <tr>
+                    <th rowspan="2" width="30">BIL</th>
+                    <th rowspan="2">NAMA PESERTA</th>
+                    <th rowspan="2" width="100">RUMAH</th>
+                    <th colspan="8">KETINGGIAN (METER)</th>
+                    <th rowspan="2" width="60">LOMPATAN TERTINGGI</th>
+                    <th rowspan="2" width="40">KED.</th>
+                </tr>
+                <tr>
+                    <th class="trial-box">1</th><th class="trial-box">2</th><th class="trial-box">3</th><th class="trial-box">4</th>
+                    <th class="trial-box">5</th><th class="trial-box">6</th><th class="trial-box">7</th><th class="trial-box">8</th>
+                </tr>`;
+            noteArea.innerHTML = "* Tanda (O) jika berjaya, (X) jika gagal, (-) jika simpan/pass.";
+        } else {
+            thead.innerHTML = `
+                <tr>
+                    <th rowspan="2" width="40">BIL</th>
+                    <th rowspan="2">NAMA PESERTA</th>
+                    <th rowspan="2" width="120">RUMAH SUKAN</th>
+                    <th colspan="3">JARAK / KETINGGIAN</th>
+                    <th rowspan="2" width="85">TERBAIK</th>
+                    <th rowspan="2" width="85">KEDUDUKAN</th>
+                    <th rowspan="2" width="70">MATA</th>
+                </tr>
+                <tr>
+                    <th width="75">1</th><th width="75">2</th><th width="75">3</th>
+                </tr>`;
+            noteArea.innerHTML = "* Catatkan jarak bagi yang tidak batal dan tanda ( X ) bagi cubaan yang batal.";
+        }
 
-        // Logik Highlight (L1, P3, dll)
+        // Highlight Boxes
+        ["boxK1", "boxK2", "boxK3", "boxL", "boxP"].forEach(id => document.getElementById(id).classList.remove('highlight'));
         if(kat.includes('1')) document.getElementById('boxK1').classList.add('highlight');
         if(kat.includes('2')) document.getElementById('boxK2').classList.add('highlight');
         if(kat.includes('3')) document.getElementById('boxK3').classList.add('highlight');
@@ -166,47 +173,39 @@
         const tbody = document.getElementById('atletRows');
         tbody.innerHTML = '';
 
-        // Tapis atlet mengikut acara dan kategori (L1/L2/L3)
         let senarai = dataSemua.filter(a => {
             let ting = a.Kelas.toString().charAt(0);
-            let k = "";
-            if(ting == "1" || ting == "2") k = a.Jantina + "3";
-            else if(ting == "3") k = a.Jantina + "2";
-            else if(ting == "4" || ting == "5") k = a.Jantina + "1";
-            
+            let k = (ting == "1" || ting == "2") ? a.Jantina + "3" : (ting == "3" ? a.Jantina + "2" : a.Jantina + "1");
             return a.AcaraIndividu.includes(acara) && k == kat;
         });
 
-        // Masukkan data atlet ke dalam jadual
+        const numCols = (acara === "Lompat Tinggi") ? 8 : 3;
+
         senarai.forEach((m, i) => {
+            let trials = "";
+            for(let c=0; c<numCols; c++) { trials += `<td class="trial-box"></td>`; }
+            
             tbody.innerHTML += `
                 <tr>
                     <td>${i + 1}</td>
                     <td class="nama-peserta">${m.NamaMurid.toUpperCase()}</td>
                     <td>${m.RumahSukan.toUpperCase()}</td>
-                    <td class="trial-box"></td>
-                    <td class="trial-box"></td>
-                    <td class="trial-box"></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
+                    ${trials}
+                    <td></td><td></td>
+                    ${acara !== "Lompat Tinggi" ? "<td></td>" : ""}
                 </tr>`;
         });
 
-        // Tambah baris kosong (Filler) supaya borang nampak profesional (sehingga 12 baris)
-        let barisSediaAda = senarai.length;
-        for(let j = barisSediaAda; j < 12; j++) {
+        // Filler rows
+        for(let j = senarai.length; j < 12; j++) {
+            let trials = "";
+            for(let c=0; c<numCols; c++) { trials += `<td class="trial-box"></td>`; }
             tbody.innerHTML += `
                 <tr>
-                    <td>${j + 1}</td>
-                    <td></td>
-                    <td></td>
-                    <td class="trial-box"></td>
-                    <td class="trial-box"></td>
-                    <td class="trial-box"></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
+                    <td>${j + 1}</td><td></td><td></td>
+                    ${trials}
+                    <td></td><td></td>
+                    ${acara !== "Lompat Tinggi" ? "<td></td>" : ""}
                 </tr>`;
         }
     }
