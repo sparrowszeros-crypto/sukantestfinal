@@ -6,7 +6,7 @@
     <style>
         body { font-family: Arial, sans-serif; padding: 10px; background: #f4f7f6; }
         .no-print { background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .container { max-width: 1000px; margin: auto; background: white; padding: 25px; border: 2px solid #000; }
+        .container { max-width: 1050px; margin: auto; background: white; padding: 25px; border: 2px solid #000; }
         
         .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; position: relative; }
         .header img { position: absolute; left: 10px; top: 0; max-width: 75px; }
@@ -19,13 +19,14 @@
         .highlight { background-color: #000 !important; color: #fff !important; }
 
         table { width: 100%; border-collapse: collapse; }
-        th, td { border: 2px solid #000; padding: 8px; text-align: center; }
-        th { background: #eee; font-size: 11px; text-transform: uppercase; }
+        th, td { border: 2px solid #000; padding: 5px; text-align: center; }
+        th { background: #eee; font-size: 10px; text-transform: uppercase; }
         
-        .nama-peserta { text-align: left; padding-left: 10px; font-size: 12px; font-weight: bold; }
-        .trial-box { height: 35px; min-width: 30px; }
+        .nama-peserta { text-align: left; padding-left: 8px; font-size: 12px; font-weight: bold; }
+        .trial-box { height: 30px; min-width: 35px; }
+        .height-input-row { height: 25px; background: #fafafa; } /* Baris kosong bawah nombor peringkat */
         
-        .footer { margin-top: 40px; display: flex; justify-content: space-between; font-weight: bold; }
+        .footer { margin-top: 30px; display: flex; justify-content: space-between; font-weight: bold; font-size: 13px; }
         .note { font-size: 11px; margin-top: 15px; font-style: italic; }
         
         @media print {
@@ -35,7 +36,7 @@
             th { background: #eee !important; -webkit-print-color-adjust: exact; }
         }
 
-        select, button { padding: 12px; font-size: 14px; margin: 5px; border-radius: 6px; border: 1px solid #ccc; cursor: pointer; }
+        select, button { padding: 10px; font-size: 14px; margin: 5px; border-radius: 6px; border: 1px solid #ccc; cursor: pointer; }
         .btn-jana { background: #27ae60; color: white; border: none; font-weight: bold; }
     </style>
 </head>
@@ -46,9 +47,9 @@
     <p id="dataStatus" style="color: #e67e22; font-weight: bold;">⏳ Memuatkan data atlet...</p>
     
     <select id="selAcara">
+        <option value="Lompat Tinggi">LOMPAT TINGGI</option>
         <option value="Lompat Jauh">LOMPAT JAUH</option>
         <option value="Lontar Peluru">LONTAR PELURU</option>
-        <option value="Lompat Tinggi">LOMPAT TINGGI</option>
         <option value="Lontar Cakera">LONTAR CAKERA</option>
     </select>
     
@@ -81,7 +82,6 @@
                 <span class="box" id="boxK1">1</span> 
                 <span class="box" id="boxK2">2</span> 
                 <span class="box" id="boxK3">3</span>
-                <small style="font-weight: normal; margin-left: 5px;">(Bulatkan)</small>
             </td>
         </tr>
         <tr>
@@ -93,17 +93,14 @@
     </table>
 
     <table id="mainTable">
-        <thead id="tableHead">
-            </thead>
-        <tbody id="atletRows">
-            </tbody>
+        <thead id="tableHead"></thead>
+        <tbody id="atletRows"></tbody>
     </table>
 
     <div class="footer">
-        <div><p>NAMA PENCATAT : _________________________________</p></div>
-        <div><p>TANDATANGAN : __________________</p></div>
+        <div><p>NAMA PENCATAT : _________________________</p></div>
+        <div><p>TANDATANGAN : _______________</p></div>
     </div>
-    
     <div id="noteArea" class="note"></div>
 </div>
 
@@ -122,36 +119,40 @@
     function janaBorang() {
         const acara = document.getElementById('selAcara').value;
         const kat = document.getElementById('selKat').value;
+        const thead = document.getElementById('tableHead');
+        const tbody = document.getElementById('atletRows');
+        const noteArea = document.getElementById('noteArea');
         
         document.getElementById('dispAcara').innerText = acara.toUpperCase();
         document.getElementById('dispFullKat').innerText = kat;
 
-        // Update Header & Layout
-        const thead = document.getElementById('tableHead');
-        const noteArea = document.getElementById('noteArea');
-        
+        // FORMAT LOMPAT TINGGI (8 PERINGKAT DENGAN RUANG KETINGGIAN)
         if(acara === "Lompat Tinggi") {
             thead.innerHTML = `
                 <tr>
-                    <th rowspan="2" width="30">BIL</th>
-                    <th rowspan="2">NAMA PESERTA</th>
-                    <th rowspan="2" width="100">RUMAH</th>
-                    <th colspan="8">KETINGGIAN (METER)</th>
-                    <th rowspan="2" width="60">LOMPATAN TERTINGGI</th>
-                    <th rowspan="2" width="40">KED.</th>
+                    <th rowspan="3" width="30">BIL</th>
+                    <th rowspan="3">NAMA PESERTA</th>
+                    <th rowspan="3" width="80">NO PESERTA</th>
+                    <th rowspan="3" width="80">RUMAH</th>
+                    <th colspan="8">PERINGKAT KETINGGIAN PALANG (METER)</th>
+                    <th rowspan="3" width="60">LOMPATAN TERTINGGI</th>
+                    <th rowspan="3" width="40">KED.</th>
                 </tr>
                 <tr>
-                    <th class="trial-box">1</th><th class="trial-box">2</th><th class="trial-box">3</th><th class="trial-box">4</th>
-                    <th class="trial-box">5</th><th class="trial-box">6</th><th class="trial-box">7</th><th class="trial-box">8</th>
+                    <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th>
+                </tr>
+                <tr class="height-input-row">
+                    <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
                 </tr>`;
-            noteArea.innerHTML = "* Tanda (O) jika berjaya, (X) jika gagal, (-) jika simpan/pass.";
+            noteArea.innerHTML = "* Tanda (O) Berjaya, (X) Gagal, (-) Pass. Baris kedua di atas adalah untuk kegunaan hakim mencatat ketinggian palang.";
         } else {
+            // FORMAT ACARA PADANG LAIN (Trial 1, 2, 3)
             thead.innerHTML = `
                 <tr>
                     <th rowspan="2" width="40">BIL</th>
                     <th rowspan="2">NAMA PESERTA</th>
                     <th rowspan="2" width="120">RUMAH SUKAN</th>
-                    <th colspan="3">JARAK / KETINGGIAN</th>
+                    <th colspan="3">CUBAAN / JARAK</th>
                     <th rowspan="2" width="85">TERBAIK</th>
                     <th rowspan="2" width="85">KEDUDUKAN</th>
                     <th rowspan="2" width="70">MATA</th>
@@ -159,7 +160,7 @@
                 <tr>
                     <th width="75">1</th><th width="75">2</th><th width="75">3</th>
                 </tr>`;
-            noteArea.innerHTML = "* Catatkan jarak bagi yang tidak batal dan tanda ( X ) bagi cubaan yang batal.";
+            noteArea.innerHTML = "* Catatkan jarak/ketinggian. Tanda (X) bagi cubaan batal.";
         }
 
         // Highlight Boxes
@@ -170,9 +171,7 @@
         if(kat.includes('L')) document.getElementById('boxL').classList.add('highlight');
         if(kat.includes('P')) document.getElementById('boxP').classList.add('highlight');
 
-        const tbody = document.getElementById('atletRows');
         tbody.innerHTML = '';
-
         let senarai = dataSemua.filter(a => {
             let ting = a.Kelas.toString().charAt(0);
             let k = (ting == "1" || ting == "2") ? a.Jantina + "3" : (ting == "3" ? a.Jantina + "2" : a.Jantina + "1");
@@ -182,28 +181,33 @@
         const numCols = (acara === "Lompat Tinggi") ? 8 : 3;
 
         senarai.forEach((m, i) => {
-            let trials = "";
-            for(let c=0; c<numCols; c++) { trials += `<td class="trial-box"></td>`; }
+            let trialCells = "";
+            for(let c=0; c<numCols; c++) { 
+                trialCells += `<td class="trial-box"></td>`; 
+            }
             
             tbody.innerHTML += `
                 <tr>
                     <td>${i + 1}</td>
                     <td class="nama-peserta">${m.NamaMurid.toUpperCase()}</td>
+                    ${acara === "Lompat Tinggi" ? `<td>${m.NomborBadan}</td>` : ""}
                     <td>${m.RumahSukan.toUpperCase()}</td>
-                    ${trials}
+                    ${trialCells}
                     <td></td><td></td>
                     ${acara !== "Lompat Tinggi" ? "<td></td>" : ""}
                 </tr>`;
         });
 
-        // Filler rows
+        // Filler rows (sampai 12 baris)
         for(let j = senarai.length; j < 12; j++) {
-            let trials = "";
-            for(let c=0; c<numCols; c++) { trials += `<td class="trial-box"></td>`; }
+            let trialCells = "";
+            for(let c=0; c<numCols; c++) { trialCells += `<td class="trial-box"></td>`; }
             tbody.innerHTML += `
                 <tr>
-                    <td>${j + 1}</td><td></td><td></td>
-                    ${trials}
+                    <td>${j + 1}</td><td></td>
+                    ${acara === "Lompat Tinggi" ? "<td></td>" : ""}
+                    <td></td>
+                    ${trialCells}
                     <td></td><td></td>
                     ${acara !== "Lompat Tinggi" ? "<td></td>" : ""}
                 </tr>`;
