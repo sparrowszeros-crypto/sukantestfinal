@@ -7,18 +7,23 @@
         body { font-family: Arial, sans-serif; padding: 20px; background: #f0f2f5; }
         .container { max-width: 950px; margin: auto; background: white; padding: 30px; border: 1px solid #333; }
         .no-print { background: #fff; padding: 20px; border-bottom: 2px solid #ccc; margin-bottom: 20px; text-align: center; }
-        .btn-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin: 15px 0; }
-        button { padding: 10px; cursor: pointer; font-weight: bold; border-radius: 4px; border: none; }
+        .btn-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin: 15px 0; }
+        button { padding: 10px; cursor: pointer; font-weight: bold; border-radius: 4px; border: none; transition: 0.3s; }
         .btn-event { background: #3498db; color: white; }
+        .btn-final { background: #e74c3c !important; color: white !important; border: 2px solid #c0392b; }
+        .btn-event:hover { opacity: 0.8; }
+        
         table { width: 100%; border-collapse: collapse; margin-top: 20px; table-layout: fixed; }
         th, td { border: 1px solid #000 !important; padding: 8px; text-align: left; word-wrap: break-word; }
-        th { background: #eee; }
-        .cat-header { background: #2c3e50 !important; color: white !important; font-weight: bold; padding: 10px; }
+        th { background: #eee; font-size: 13px; }
+        .cat-header { background: #2c3e50 !important; color: white !important; font-weight: bold; padding: 10px; text-align: center; }
         .team-names { font-size: 11px; color: #444; margin-top: 4px; display: block; }
+        
         @media print {
             .no-print { display: none !important; }
             body { background: white; padding: 0; }
             .container { border: none; max-width: 100%; }
+            .cat-header { background: #2c3e50 !important; -webkit-print-color-adjust: exact; }
         }
     </style>
 </head>
@@ -27,21 +32,21 @@
 <div class="no-print">
     <h2>PANEL HAKIM PENCATAT SMKTD2</h2>
     <div class="btn-grid" id="eventButtons"></div>
-    <p id="status">Memuat data...</p>
+    <p id="status">⏳ Memuat data dari Google Sheets...</p>
 </div>
 
 <div class="container">
     <div style="text-align:center;">
         <img src="lencana.jpg" alt="Lencana" style="max-width:80px;">
         <h2 style="margin:5px 0;">BORANG PENCATAT KEPUTUSAN</h2>
-        <h3 style="margin:5px 0;">ACARA: <span id="eventTitle">..........</span></h3>
+        <h3 style="margin:5px 0;">ACARA: <span id="eventTitle">..........</span> <span id="finalLabel" style="color:red;"></span></h3>
     </div>
 
     <table>
         <thead>
             <tr>
                 <th width="5%">No</th>
-                <th width="15%">Saringan/Lorong</th>
+                <th width="15%">Lorong (Final)</th>
                 <th width="12%">No Badan</th>
                 <th>Nama Atlet / Pasukan (Rumah)</th>
                 <th width="15%">Masa/Jarak</th>
@@ -55,27 +60,56 @@
 <script>
     const scriptURL = 'https://script.google.com/macros/s/AKfycbzCl7YHhTZrR9calkir3fKiml518a3TPOLAktvtwffM1nBam2oaRhK1IodfzyVV6nuO/exec';
     let database = [];
-    const acaraList = ["70m", "100m", "400m", "4x100m", "4x400m", "Lompat Jauh", "Lontar Peluru", "Lompat Tinggi", "Tarik Tali"];
+    
+    // Senarai acara biasa
+    const acaraList = ["70m", "100m", "400m", "4x100m", "4x400m", "Lompat Jauh", "Lontar Peluru", "Lompat Tinggi"];
+    // Senarai acara yang ada Final
+    const finalEvents = ["100m", "400m"];
 
     const btnArea = document.getElementById('eventButtons');
+    
+    // Jana butang biasa
     acaraList.forEach(a => {
-        btnArea.innerHTML += `<button class="btn-event" onclick="generateBorang('${a}')">${a}</button>`;
+        btnArea.innerHTML += `<button class="btn-event" onclick="generateBorang('${a}', false)">${a}</button>`;
+    });
+
+    // Jana butang Final (Warna Merah)
+    finalEvents.forEach(a => {
+        btnArea.innerHTML += `<button class="btn-final" onclick="generateBorang('${a}', true)">🚩 FINAL ${a}</button>`;
     });
 
     window.onload = () => {
         fetch(scriptURL).then(res => res.json()).then(res => {
             database = res.atlet;
-            document.getElementById('status').innerText = '✅ Data Sedia.';
+            document.getElementById('status').innerText = '✅ Data Berjaya Ditarik.';
+        }).catch(err => {
+            document.getElementById('status').innerText = '❌ Gagal hubungi Google Sheets.';
         });
     };
 
-    function generateBorang(acara) {
+    function generateBorang(acara, isFinalOnly) {
         document.getElementById('eventTitle').innerText = acara.toUpperCase();
+        document.getElementById('finalLabel').innerText = isFinalOnly ? "(AKHIR)" : "";
+        
         const tbody = document.getElementById('atletRows');
         tbody.innerHTML = '';
 
-        let isTeamEvent = acara.includes("4x") || acara.includes("Tarik");
-        let filtered = database.filter(a => (a.AcaraIndividu.includes(acara) || a.AcaraBerpasukan.includes(acara)));
+        let isTeamEvent = acara.includes("4x");
+        
+        // TAPIS DATA
+        let filtered = database.filter(a => {
+            const matchAcara = (a.AcaraIndividu.includes(acara) || a.AcaraBerpasukan.includes(acara));
+            if (isFinalOnly) {
+                // Cari tanda (F) dalam Nombor Badan
+                return matchAcara && a.NomborBadan.toString().toUpperCase().includes("(F)");
+            }
+            return matchAcara;
+        });
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px;">Tiada data ditemui untuk kategori ini.</td></tr>`;
+            return;
+        }
 
         let kategoriMap = {};
         filtered.forEach(a => {
@@ -83,7 +117,7 @@
             if (acara === "4x400m") {
                 kat = a.Jantina === "L" ? "LELAKI TERBUKA" : "PEREMPUAN TERBUKA";
             } else {
-                let ting = a.Kelas.charAt(0);
+                let ting = a.Kelas.toString().charAt(0);
                 if (ting == "1" || ting == "2") kat = a.Jantina + "3";
                 else if (ting == "3") kat = a.Jantina + "2";
                 else if (ting == "4" || ting == "5") kat = a.Jantina + "1";
@@ -103,8 +137,12 @@
             let list = isTeamEvent ? Object.keys(kategoriMap[kat]) : kategoriMap[kat];
 
             list.forEach((item, i) => {
+                // Untuk final, biasanya 8 orang sahaja. Lorong 1-8.
                 let lane = (i % 8) + 1;
                 let heat = Math.ceil((i + 1) / 8);
+                
+                let labelLorong = isFinalOnly ? `LORONG ${lane}` : `S${heat}-L${lane}`;
+                
                 let namaDisplay = isTeamEvent ? 
                     `<strong>${item.toUpperCase()}</strong><span class="team-names">Pelari: ${kategoriMap[kat][item].join(", ")}</span>` : 
                     `${item.NamaMurid} (${item.Kelas} - ${item.RumahSukan})`;
@@ -112,7 +150,7 @@
                 tbody.innerHTML += `
                     <tr>
                         <td>${i + 1}</td>
-                        <td style="color:red; font-weight:bold">S${heat}-L${lane}</td>
+                        <td style="color:${isFinalOnly ? 'blue' : 'red'}; font-weight:bold">${labelLorong}</td>
                         <td style="text-align:center">${isTeamEvent ? '-' : item.NomborBadan}</td>
                         <td>${namaDisplay}</td>
                         <td></td><td></td>
