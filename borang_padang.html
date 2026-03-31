@@ -6,12 +6,11 @@
     <style>
         body { font-family: Arial, sans-serif; padding: 10px; background: #f4f7f6; }
         .no-print { background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .container { max-width: 1050px; margin: auto; background: white; padding: 25px; border: 2px solid #000; }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 25px; border: 2px solid #000; }
         
         .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; position: relative; }
         .header img { position: absolute; left: 10px; top: 0; max-width: 75px; }
         .header h2 { margin: 0; font-size: 20px; text-transform: uppercase; }
-        .header p { margin: 5px 0; font-weight: bold; font-size: 16px; }
 
         .info-table { width: 100%; margin-bottom: 15px; border: none; }
         .info-table td { border: none; padding: 5px; font-weight: bold; font-size: 14px; }
@@ -19,15 +18,15 @@
         .highlight { background-color: #000 !important; color: #fff !important; }
 
         table { width: 100%; border-collapse: collapse; }
-        th, td { border: 2px solid #000; padding: 5px; text-align: center; }
+        th, td { border: 1px solid #000; padding: 4px; text-align: center; }
         th { background: #eee; font-size: 10px; text-transform: uppercase; }
         
-        .nama-peserta { text-align: left; padding-left: 8px; font-size: 12px; font-weight: bold; }
-        .trial-box { height: 30px; min-width: 35px; }
-        .height-input-row { height: 25px; background: #fafafa; } /* Baris kosong bawah nombor peringkat */
+        .nama-peserta { text-align: left; padding-left: 5px; font-size: 11px; font-weight: bold; }
+        .trial-sub-box { width: 25px; height: 35px; border: 1px solid #000; } /* Kotak cubaan kecil (Purple) */
+        .height-header { height: 25px; background: #fafafa; font-weight: bold; }
         
         .footer { margin-top: 30px; display: flex; justify-content: space-between; font-weight: bold; font-size: 13px; }
-        .note { font-size: 11px; margin-top: 15px; font-style: italic; }
+        .note { font-size: 10px; margin-top: 10px; font-style: italic; }
         
         @media print {
             .no-print { display: none !important; }
@@ -50,16 +49,11 @@
         <option value="Lompat Tinggi">LOMPAT TINGGI</option>
         <option value="Lompat Jauh">LOMPAT JAUH</option>
         <option value="Lontar Peluru">LONTAR PELURU</option>
-        <option value="Lontar Cakera">LONTAR CAKERA</option>
     </select>
     
     <select id="selKat">
-        <option value="L1">L1 (Ting 4-5)</option>
-        <option value="L2">L2 (Ting 3)</option>
-        <option value="L3">L3 (Ting 1-2)</option>
-        <option value="P1">P1 (Ting 4-5)</option>
-        <option value="P2">P2 (Ting 3)</option>
-        <option value="P3">P3 (Ting 1-2)</option>
+        <option value="L1">L1</option><option value="L2">L2</option><option value="L3">L3</option>
+        <option value="P1">P1</option><option value="P2">P2</option><option value="P3">P3</option>
     </select>
     
     <button class="btn-jana" onclick="janaBorang()">JANA & PAPAR</button>
@@ -68,9 +62,8 @@
 
 <div class="container">
     <div class="header">
-        <img src="lencana.jpg" alt="Logo SMKTD2">
-        <h2>KEJOHANAN SUKAN OLAHRAGA KALI KE-16</h2>
-        <p>SMK TAMAN DESA 2</p>
+        <img src="lencana.jpg" alt="Logo">
+        <h2>KEJOHANAN SUKAN OLAHRAGA KALI KE-16 SMKTD2</h2>
     </div>
 
     <table class="info-table">
@@ -78,11 +71,7 @@
             <td width="15%">ACARA</td>
             <td width="40%">: <span class="box" style="min-width: 150px;" id="dispAcara"></span></td>
             <td width="10%">KELAS</td>
-            <td>: 
-                <span class="box" id="boxK1">1</span> 
-                <span class="box" id="boxK2">2</span> 
-                <span class="box" id="boxK3">3</span>
-            </td>
+            <td>: <span class="box" id="boxK1">1</span> <span class="box" id="boxK2">2</span> <span class="box" id="boxK3">3</span></td>
         </tr>
         <tr>
             <td>JANTINA</td>
@@ -126,41 +115,46 @@
         document.getElementById('dispAcara').innerText = acara.toUpperCase();
         document.getElementById('dispFullKat').innerText = kat;
 
-        // FORMAT LOMPAT TINGGI (8 PERINGKAT DENGAN RUANG KETINGGIAN)
         if(acara === "Lompat Tinggi") {
+            // HEADER LOMPAT TINGGI DENGAN 3 CUBAAN (PURPLE BOXES)
+            let headerPeringkat = "";
+            let headerSubPeringkat = "";
+            let rowKetinggian = "";
+            
+            for(let i=1; i<=8; i++) {
+                headerPeringkat += `<th colspan="3">${i}</th>`;
+                headerSubPeringkat += `<th width="20">1</th><th width="20">2</th><th width="20">3</th>`;
+                rowKetinggian += `<td colspan="3" class="height-header"></td>`;
+            }
+
             thead.innerHTML = `
                 <tr>
                     <th rowspan="3" width="30">BIL</th>
                     <th rowspan="3">NAMA PESERTA</th>
-                    <th rowspan="3" width="80">NO PESERTA</th>
-                    <th rowspan="3" width="80">RUMAH</th>
-                    <th colspan="8">PERINGKAT KETINGGIAN PALANG (METER)</th>
-                    <th rowspan="3" width="60">LOMPATAN TERTINGGI</th>
-                    <th rowspan="3" width="40">KED.</th>
+                    <th rowspan="3" width="60">NO</th>
+                    <th rowspan="3" width="60">RUMAH</th>
+                    <th colspan="24">PERINGKAT KETINGGIAN PALANG (METER)</th>
+                    <th rowspan="3" width="50">BEST</th>
+                    <th rowspan="3" width="30">KED.</th>
                 </tr>
-                <tr>
-                    <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th>
-                </tr>
-                <tr class="height-input-row">
-                    <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
-                </tr>`;
-            noteArea.innerHTML = "* Tanda (O) Berjaya, (X) Gagal, (-) Pass. Baris kedua di atas adalah untuk kegunaan hakim mencatat ketinggian palang.";
+                <tr>${headerPeringkat}</tr>
+                <tr class="height-header">${rowKetinggian}</tr>`;
+            
+            noteArea.innerHTML = "* Tanda (O) Berjaya, (X) Gagal, (-) Pass. Tanda pada petak kecil 1, 2, 3 bagi setiap peringkat ketinggian.";
         } else {
-            // FORMAT ACARA PADANG LAIN (Trial 1, 2, 3)
+            // HEADER BIASA (JAUH/PELURU)
             thead.innerHTML = `
                 <tr>
                     <th rowspan="2" width="40">BIL</th>
                     <th rowspan="2">NAMA PESERTA</th>
-                    <th rowspan="2" width="120">RUMAH SUKAN</th>
+                    <th rowspan="2" width="120">RUMAH</th>
                     <th colspan="3">CUBAAN / JARAK</th>
                     <th rowspan="2" width="85">TERBAIK</th>
                     <th rowspan="2" width="85">KEDUDUKAN</th>
                     <th rowspan="2" width="70">MATA</th>
                 </tr>
-                <tr>
-                    <th width="75">1</th><th width="75">2</th><th width="75">3</th>
-                </tr>`;
-            noteArea.innerHTML = "* Catatkan jarak/ketinggian. Tanda (X) bagi cubaan batal.";
+                <tr><th width="75">1</th><th width="75">2</th><th width="75">3</th></tr>`;
+            noteArea.innerHTML = "* Catatkan jarak. Tanda (X) bagi cubaan batal.";
         }
 
         // Highlight Boxes
@@ -178,12 +172,12 @@
             return a.AcaraIndividu.includes(acara) && k == kat;
         });
 
-        const numCols = (acara === "Lompat Tinggi") ? 8 : 3;
-
         senarai.forEach((m, i) => {
-            let trialCells = "";
-            for(let c=0; c<numCols; c++) { 
-                trialCells += `<td class="trial-box"></td>`; 
+            let cells = "";
+            if(acara === "Lompat Tinggi") {
+                for(let c=0; c<24; c++) { cells += `<td class="trial-sub-box"></td>`; } // 8 peringkat x 3 cubaan
+            } else {
+                for(let c=0; c<3; c++) { cells += `<td style="height:40px"></td>`; }
             }
             
             tbody.innerHTML += `
@@ -192,26 +186,11 @@
                     <td class="nama-peserta">${m.NamaMurid.toUpperCase()}</td>
                     ${acara === "Lompat Tinggi" ? `<td>${m.NomborBadan}</td>` : ""}
                     <td>${m.RumahSukan.toUpperCase()}</td>
-                    ${trialCells}
+                    ${cells}
                     <td></td><td></td>
                     ${acara !== "Lompat Tinggi" ? "<td></td>" : ""}
                 </tr>`;
         });
-
-        // Filler rows (sampai 12 baris)
-        for(let j = senarai.length; j < 12; j++) {
-            let trialCells = "";
-            for(let c=0; c<numCols; c++) { trialCells += `<td class="trial-box"></td>`; }
-            tbody.innerHTML += `
-                <tr>
-                    <td>${j + 1}</td><td></td>
-                    ${acara === "Lompat Tinggi" ? "<td></td>" : ""}
-                    <td></td>
-                    ${trialCells}
-                    <td></td><td></td>
-                    ${acara !== "Lompat Tinggi" ? "<td></td>" : ""}
-                </tr>`;
-        }
     }
 </script>
 </body>
