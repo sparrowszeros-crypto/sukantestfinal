@@ -41,14 +41,14 @@
     <div id="loading">Memuat turun markah terkini...</div>
     <div id="rankingList" class="ranking-list"></div>
 
-    <a href="dashboard.html" class="btn-back">Kembali ke Dashboard</a>
+    <a href="index.html" class="btn-back">Kembali ke Dashboard</a>
 </div>
 
 <script>
-    // URL CSV dari sheet "markah" anda
+    // URL CSV menggunakan GID yang cikgu berikan untuk ketepatan 100%
     const sheetID = '1S53rBZn5NUMks5xnQLbPryseCUGuKE_YVecNKRWQy3Y';
-    const sheetName = 'markah';
-    const csvURL = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:csv&sheet=${sheetName}`;
+    const gid = '62180236';
+    const csvURL = `https://docs.google.com/spreadsheets/d/${sheetID}/export?format=csv&gid=${gid}`;
 
     async function fetchScores() {
         try {
@@ -56,14 +56,29 @@
             const data = await response.text();
             
             // Tukar CSV ke Array
-            const rows = data.split('\n').slice(1); // Buang header
-            let results = rows.map(row => {
-                const cols = row.split(',');
-                return {
-                    nama: cols[0].replace(/"/g, '').toUpperCase(),
-                    mata: parseInt(cols[1].replace(/"/g, '')) || 0
-                };
-            });
+            const rows = data.split('\n');
+            let results = [];
+
+            // Mula dari baris 1 untuk abaikan baris 0 (Header/Tajuk)
+            for (let i = 1; i < rows.length; i++) {
+                let row = rows[i].trim();
+                
+                // Abaikan baris jika kosong
+                if (row === "") continue;
+
+                // Pisahkan lajur menggunakan koma
+                let cols = row.split(',');
+                
+                if (cols.length >= 2) {
+                    // Bersihkan tanda " " jika ada
+                    let namaRumah = cols[0].replace(/["']/g, '').trim().toUpperCase();
+                    let mataRumah = parseInt(cols[1].replace(/["']/g, '').trim()) || 0;
+                    
+                    if (namaRumah !== "") {
+                        results.push({ nama: namaRumah, mata: mataRumah });
+                    }
+                }
+            }
 
             // SORT: Markah tertinggi di atas
             results.sort((a, b) => b.mata - a.mata);
@@ -71,6 +86,7 @@
             displayRanking(results);
         } catch (error) {
             document.getElementById('loading').innerText = "❌ Gagal memuat data. Pastikan Google Sheet dikongsi 'Anyone with the link'.";
+            console.error(error);
         }
     }
 
@@ -78,6 +94,11 @@
         const list = document.getElementById('rankingList');
         document.getElementById('loading').style.display = 'none';
         list.innerHTML = '';
+
+        if (data.length === 0) {
+            list.innerHTML = "<p>Tiada data dijumpai dalam rekod.</p>";
+            return;
+        }
 
         data.forEach((item, index) => {
             let houseClass = "";
@@ -88,6 +109,7 @@
             else if(item.nama.includes("LAKSAMANA")) houseClass = "house-laksamana";
             else if(item.nama.includes("TEMENGGUNG")) houseClass = "house-temenggung";
             else if(item.nama.includes("BENDAHARA")) houseClass = "house-bendahara";
+            else houseClass = "house-laksamana"; // Warna default jika nama berbeza sikit
 
             // Set medal untuk Top 3
             if(index === 0) medal = "🥇";
@@ -109,7 +131,7 @@
     // Panggil fungsi sewaktu buka halaman
     fetchScores();
     
-    // Auto refresh setiap 1 minit
+    // Auto refresh setiap 1 minit (60000 milisaat)
     setInterval(fetchScores, 60000);
 </script>
 
