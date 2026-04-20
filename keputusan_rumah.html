@@ -13,13 +13,12 @@
         .ranking-list { margin-top: 30px; }
         .rank-item { display: flex; align-items: center; justify-content: center; padding: 20px; margin-bottom: 15px; border-radius: 10px; color: white; font-weight: bold; font-size: 22px; transition: 0.3s; }
         
-        /* Warna Rumah Sukan SMKTD2 */
-        .house-helang { background: #e74c3c; } /* Merah */
-        .house-merak { background: #3498db; } /* Biru */
-        .house-jentayu { background: #f1c40f; color: #2c3e50; } /* Kuning */
-        .house-belatuk { background: #27ae60; } /* Hijau */
-        .house-kenyalang { background: #e67e22; } /* Oren */
-        .house-default { background: #34495e; } /* Kelabu gelap jika tiada padanan */
+        /* Warna Rumah Sukan SMKTD2 Mengikut Tetapan Cikgu */
+        .house-merak { background: #e74c3c; } /* Merah */
+        .house-belatuk { background: #3498db; } /* Biru */
+        .house-kenyalang { background: #f1c40f; color: #2c3e50; } /* Kuning */
+        .house-helang { background: #27ae60; } /* Hijau */
+        .house-jentayu { background: #e67e22; } /* Jingga */
 
         .medal { font-size: 28px; margin-left: 15px; }
         .btn-back { display: inline-block; margin-top: 30px; padding: 10px 20px; background: #34495e; color: white; text-decoration: none; border-radius: 5px; }
@@ -41,59 +40,58 @@
 </div>
 
 <script>
-    // URL CSV menggunakan GID
     const sheetID = '1S53rBZn5NUMks5xnQLbPryseCUGuKE_YVecNKRWQy3Y';
     const gid = '62180236';
     const csvURL = `https://docs.google.com/spreadsheets/d/${sheetID}/export?format=csv&gid=${gid}`;
 
-    // ---------------------------------------------------------
-    // TETAPAN LAJUR (COLUMN) GOOGLE SHEET
-    // Lajur A = 0, B = 1, C = 2, D = 3, E = 4, F = 5, G = 6, H = 7, I = 8
-    // ---------------------------------------------------------
-    const LAJUR_NAMA_RUMAH = 6; // Mengambil data dari Lajur G (RUMAH SUKAN)
-    const LAJUR_MARKAH = 8;     // Mengambil data dari Lajur I (MATA)
+    // Tetapan Lajur
+    const LAJUR_NAMA_RUMAH = 6; // Lajur G
+    const LAJUR_MARKAH = 8;     // Lajur I
+
+    // Senarai rasmi rumah sukan. Sebarang nama lain (seperti Mohd Bukhari) akan ditendang keluar.
+    const SENARAI_RUMAH_SAH = ["BELATUK", "KENYALANG", "HELANG", "MERAK", "JENTAYU"];
 
     async function fetchScores() {
         try {
             const response = await fetch(csvURL);
             const data = await response.text();
-            
-            // Baca data sebaris demi sebaris
-            // Guna split regex ini untuk abaikan koma yang mungkin ada dalam "quote"
             const rows = data.split(/\r?\n/);
             
-            let rekodTerkumpul = {}; // Objek untuk simpan jumlah markah
+            // Sediakan markah 0 untuk semua rumah sukan supaya 5 rumah sentiasa wujud walaupun tiada markah lagi
+            let rekodTerkumpul = {
+                "BELATUK": 0,
+                "KENYALANG": 0,
+                "HELANG": 0,
+                "MERAK": 0,
+                "JENTAYU": 0
+            };
 
-            // Mula dari baris 1 (Abaikan baris 0 kerana ia adalah header)
             for (let i = 1; i < rows.length; i++) {
                 let row = rows[i].trim();
                 if (row === "") continue;
 
-                // Pisahkan lajur mengikut koma (standard CSV)
                 let cols = row.split(',');
                 
                 if (cols.length > Math.max(LAJUR_NAMA_RUMAH, LAJUR_MARKAH)) {
-                    // Buang tanda quote (") dan bersihkan ejaan
-                    let namaRumah = cols[LAJUR_NAMA_RUMAH] ? cols[LAJUR_NAMA_RUMAH].replace(/["']/g, '').trim().toUpperCase() : "";
+                    let namaRumahMentah = cols[LAJUR_NAMA_RUMAH] ? cols[LAJUR_NAMA_RUMAH].replace(/["']/g, '').trim().toUpperCase() : "";
                     let mata = cols[LAJUR_MARKAH] ? parseInt(cols[LAJUR_MARKAH].replace(/["']/g, '').trim()) : 0;
                     
-                    if (namaRumah !== "" && !isNaN(mata)) {
-                        // FUNGSI AUTO-SUM: Campurkan markah untuk rumah yang sama
-                        if (!rekodTerkumpul[namaRumah]) {
-                            rekodTerkumpul[namaRumah] = 0;
-                        }
-                        rekodTerkumpul[namaRumah] += mata;
+                    // Semak jika nama dalam lajur G bertepatan dengan 5 rumah rasmi kita
+                    let rumahSah = SENARAI_RUMAH_SAH.find(rumah => namaRumahMentah.includes(rumah));
+
+                    if (rumahSah && !isNaN(mata)) {
+                        rekodTerkumpul[rumahSah] += mata;
                     }
                 }
             }
 
-            // Tukar objek rekodTerkumpul menjadi format Array supaya boleh disusun (sort)
+            // Tukar ke format Array untuk proses susunan (sorting)
             let results = [];
             for (let rumah in rekodTerkumpul) {
                 results.push({ nama: rumah, mata: rekodTerkumpul[rumah] });
             }
 
-            // Susun: Markah tertinggi di atas
+            // Susun: Markah tertinggi di kedudukan nombor 1
             results.sort((a, b) => b.mata - a.mata);
             displayRanking(results);
 
@@ -108,30 +106,25 @@
         document.getElementById('loading').style.display = 'none';
         list.innerHTML = '';
 
-        if (data.length === 0) {
-            list.innerHTML = "<p>Tiada rekod pemenang ditemui di dalam pangkalan data.</p>";
-            return;
-        }
-
-        data.forEach((item, index) => {
-            let houseClass = "house-default";
+        // Tunjuk 5 yang teratas sahaja (memang ada 5 pun)
+        data.slice(0, 5).forEach((item, index) => {
+            let houseClass = "";
             let medal = "";
             let tempatLabel = "";
             
-            // Pengesanan warna ikut nama rumah yang tepat
-            if(item.nama.includes("HELANG")) houseClass = "house-helang";
-            else if(item.nama.includes("MERAK")) houseClass = "house-merak";
-            else if(item.nama.includes("JENTAYU")) houseClass = "house-jentayu";
-            else if(item.nama.includes("BELATUK")) houseClass = "house-belatuk";
-            else if(item.nama.includes("KENYALANG")) houseClass = "house-kenyalang";
+            // Padankan nama dengan warna CSS
+            if(item.nama === "MERAK") houseClass = "house-merak";
+            else if(item.nama === "BELATUK") houseClass = "house-belatuk";
+            else if(item.nama === "KENYALANG") houseClass = "house-kenyalang";
+            else if(item.nama === "HELANG") houseClass = "house-helang";
+            else if(item.nama === "JENTAYU") houseClass = "house-jentayu";
 
-            // Tetapkan Label Kedudukan
+            // Tetapkan Label
             if(index === 0) { tempatLabel = "Tempat Pertama"; medal = "🥇"; }
             else if(index === 1) { tempatLabel = "Tempat Kedua"; medal = "🥈"; }
             else if(index === 2) { tempatLabel = "Tempat Ketiga"; medal = "🥉"; }
             else { tempatLabel = `Tempat Ke-${index + 1}`; medal = "🎖️"; }
 
-            // Papar mengikut format: Tempat pertama | Belatuk | Markah 463
             list.innerHTML += `
                 <div class="rank-item ${houseClass}">
                     ${tempatLabel} &nbsp;|&nbsp; ${item.nama} &nbsp;|&nbsp; Markah ${item.mata} ${medal}
@@ -140,9 +133,7 @@
         });
     }
 
-    // Panggil kali pertama apabila dibuka
     fetchScores();
-    // Refresh secara automatik setiap 15 saat supaya lebih pantas dikemas kini
     setInterval(fetchScores, 15000); 
 </script>
 
