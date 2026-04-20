@@ -11,18 +11,32 @@
         .refresh-tag { font-size: 12px; color: #27ae60; margin-bottom: 20px; display: block; }
         
         .ranking-list { margin-top: 30px; }
-        .rank-item { display: flex; align-items: center; justify-content: center; padding: 20px; margin-bottom: 15px; border-radius: 10px; color: white; font-weight: bold; font-size: 22px; transition: 0.3s; }
+        .rank-item { display: flex; align-items: center; justify-content: center; padding: 20px; margin-bottom: 15px; border-radius: 10px; color: white; font-weight: bold; font-size: 22px; transition: 0.3s; border: 2px solid transparent; }
         
-        /* Warna Rumah Sukan SMKTD2 Mengikut Tetapan Cikgu */
-        .house-merak { background: #e74c3c; } /* Merah */
-        .house-belatuk { background: #3498db; } /* Biru */
-        .house-kenyalang { background: #f1c40f; color: #2c3e50; } /* Kuning */
-        .house-helang { background: #27ae60; } /* Hijau */
-        .house-jentayu { background: #e67e22; } /* Jingga */
+        /* Warna Rumah Sukan SMKTD2 */
+        .house-merak { background: #e74c3c !important; color: white !important; }
+        .house-belatuk { background: #3498db !important; color: white !important; }
+        .house-kenyalang { background: #f1c40f !important; color: #2c3e50 !important; }
+        .house-helang { background: #27ae60 !important; color: white !important; }
+        .house-jentayu { background: #e67e22 !important; color: white !important; }
 
-        .medal { font-size: 28px; margin-left: 15px; }
-        .btn-back { display: inline-block; margin-top: 30px; padding: 10px 20px; background: #34495e; color: white; text-decoration: none; border-radius: 5px; }
+        /* Butang */
+        .action-buttons { margin-top: 30px; display: flex; gap: 10px; justify-content: center; }
+        .btn { padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; cursor: pointer; border: none; font-size: 16px; }
+        .btn-back { background: #34495e; color: white; }
+        .btn-print { background: #2980b9; color: white; }
+        .btn-print:hover { background: #1f6391; }
+
         #loading { padding: 50px; font-weight: bold; color: #7f8c8d; }
+
+        /* FORMAT CETAK (PRINT) */
+        @media print {
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; max-width: 100%; width: 100%; padding: 0; }
+            .action-buttons, .refresh-tag, .btn-back { display: none !important; }
+            .rank-item { border: 1px solid #ccc; color: black !important; background: white !important; margin-bottom: 10px; }
+            h1 { font-size: 24pt; }
+        }
     </style>
 </head>
 <body>
@@ -31,24 +45,37 @@
     <img src="lencana.jpg" alt="Lencana" style="width: 80px;">
     <h1>KEDUDUKAN RUMAH SUKAN</h1>
     <p style="margin: 0;">KEJOHANAN OLAHRAGA SMKTD2 2026</p>
-    <span class="refresh-tag">● Live Update Markah Terkumpul</span>
+    <span class="refresh-tag">● Live Update + Markah Tambahan</span>
 
-    <div id="loading">Memuat turun & mengira markah terkini...</div>
+    <div id="loading">Memuat turun & mengira markah...</div>
     <div id="rankingList" class="ranking-list"></div>
 
-    <a href="index.html" class="btn-back">Kembali ke Dashboard</a>
+    <div class="action-buttons">
+        <a href="index.html" class="btn btn-back">Kembali ke Dashboard</a>
+        <button onclick="window.print()" class="btn btn-print">🖨️ Cetak Keputusan (Untuk Emcee)</button>
+    </div>
 </div>
 
 <script>
+    // 1. DATA GOOGLE SHEET
     const sheetID = '1S53rBZn5NUMks5xnQLbPryseCUGuKE_YVecNKRWQy3Y';
     const gid = '62180236';
     const csvURL = `https://docs.google.com/spreadsheets/d/${sheetID}/export?format=csv&gid=${gid}`;
 
-    // Tetapan Lajur
-    const LAJUR_NAMA_RUMAH = 6; // Lajur G
-    const LAJUR_MARKAH = 8;     // Lajur I
+    // 2. TETAPAN LAJUR (G = 6, I = 8)
+    const LAJUR_NAMA_RUMAH = 6;
+    const LAJUR_MARKAH = 8;
 
-    // Senarai rasmi rumah sukan. Sebarang nama lain (seperti Mohd Bukhari) akan ditendang keluar.
+    // 3. BAHAGIAN MARKAH TAMBAHAN (Cikgu-cikgu lain boleh edit di sini)
+    // Masukkan markah terkumpul bagi setiap kategori di bawah:
+    const MARKAH_TAMBAHAN = {
+        "BELATUK": 50,    // Contoh: Markah Sukantara + Khemah
+        "KENYALANG": 40, 
+        "HELANG": 35, 
+        "MERAK": 60, 
+        "JENTAYU": 45
+    };
+
     const SENARAI_RUMAH_SAH = ["BELATUK", "KENYALANG", "HELANG", "MERAK", "JENTAYU"];
 
     async function fetchScores() {
@@ -57,47 +84,42 @@
             const data = await response.text();
             const rows = data.split(/\r?\n/);
             
-            // Sediakan markah 0 untuk semua rumah sukan supaya 5 rumah sentiasa wujud walaupun tiada markah lagi
+            // Masukkan markah tambahan sebagai markah permulaan (Base Score)
             let rekodTerkumpul = {
-                "BELATUK": 0,
-                "KENYALANG": 0,
-                "HELANG": 0,
-                "MERAK": 0,
-                "JENTAYU": 0
+                "BELATUK": MARKAH_TAMBAHAN["BELATUK"] || 0,
+                "KENYALANG": MARKAH_TAMBAHAN["KENYALANG"] || 0,
+                "HELANG": MARKAH_TAMBAHAN["HELANG"] || 0,
+                "MERAK": MARKAH_TAMBAHAN["MERAK"] || 0,
+                "JENTAYU": MARKAH_TAMBAHAN["JENTAYU"] || 0
             };
 
             for (let i = 1; i < rows.length; i++) {
                 let row = rows[i].trim();
                 if (row === "") continue;
-
                 let cols = row.split(',');
                 
                 if (cols.length > Math.max(LAJUR_NAMA_RUMAH, LAJUR_MARKAH)) {
                     let namaRumahMentah = cols[LAJUR_NAMA_RUMAH] ? cols[LAJUR_NAMA_RUMAH].replace(/["']/g, '').trim().toUpperCase() : "";
                     let mata = cols[LAJUR_MARKAH] ? parseInt(cols[LAJUR_MARKAH].replace(/["']/g, '').trim()) : 0;
                     
-                    // Semak jika nama dalam lajur G bertepatan dengan 5 rumah rasmi kita
                     let rumahSah = SENARAI_RUMAH_SAH.find(rumah => namaRumahMentah.includes(rumah));
-
                     if (rumahSah && !isNaN(mata)) {
                         rekodTerkumpul[rumahSah] += mata;
                     }
                 }
             }
 
-            // Tukar ke format Array untuk proses susunan (sorting)
             let results = [];
             for (let rumah in rekodTerkumpul) {
                 results.push({ nama: rumah, mata: rekodTerkumpul[rumah] });
             }
 
-            // Susun: Markah tertinggi di kedudukan nombor 1
             results.sort((a, b) => b.mata - a.mata);
             displayRanking(results);
 
         } catch (error) {
-            document.getElementById('loading').innerText = "❌ Gagal memuat data. Pastikan Google Sheet dikongsi 'Anyone with the link'.";
-            console.error("Ralat Fetching:", error);
+            document.getElementById('loading').innerText = "❌ Ralat data.";
+            console.error(error);
         }
     }
 
@@ -106,35 +128,32 @@
         document.getElementById('loading').style.display = 'none';
         list.innerHTML = '';
 
-        // Tunjuk 5 yang teratas sahaja (memang ada 5 pun)
-        data.slice(0, 5).forEach((item, index) => {
+        data.forEach((item, index) => {
             let houseClass = "";
             let medal = "";
             let tempatLabel = "";
             
-            // Padankan nama dengan warna CSS
             if(item.nama === "MERAK") houseClass = "house-merak";
             else if(item.nama === "BELATUK") houseClass = "house-belatuk";
             else if(item.nama === "KENYALANG") houseClass = "house-kenyalang";
             else if(item.nama === "HELANG") houseClass = "house-helang";
             else if(item.nama === "JENTAYU") houseClass = "house-jentayu";
 
-            // Tetapkan Label
-            if(index === 0) { tempatLabel = "Tempat Pertama"; medal = "🥇"; }
-            else if(index === 1) { tempatLabel = "Tempat Kedua"; medal = "🥈"; }
-            else if(index === 2) { tempatLabel = "Tempat Ketiga"; medal = "🥉"; }
-            else { tempatLabel = `Tempat Ke-${index + 1}`; medal = "🎖️"; }
+            if(index === 0) { tempatLabel = "TEMPAT PERTAMA"; medal = "🥇"; }
+            else if(index === 1) { tempatLabel = "TEMPAT KEDUA"; medal = "🥈"; }
+            else if(index === 2) { tempatLabel = "TEMPAT KETIGA"; medal = "🥉"; }
+            else { tempatLabel = `TEMPAT KE-${index + 1}`; medal = "🎖️"; }
 
             list.innerHTML += `
                 <div class="rank-item ${houseClass}">
-                    ${tempatLabel} &nbsp;|&nbsp; ${item.nama} &nbsp;|&nbsp; Markah ${item.mata} ${medal}
+                    ${tempatLabel} &nbsp;|&nbsp; ${item.nama} &nbsp;|&nbsp; JUMLAH: ${item.mata} ${medal}
                 </div>
             `;
         });
     }
 
     fetchScores();
-    setInterval(fetchScores, 15000); 
+    setInterval(fetchScores, 20000); 
 </script>
 
 </body>
