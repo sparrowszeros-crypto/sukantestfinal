@@ -188,7 +188,15 @@
                 </tr>`;
         });
 
-        if (!adaData) {
+        // Tambah butang cetak saringan jika ada data
+        if (adaData) {
+            tbody.innerHTML += `
+                <tr class="no-print">
+                    <td colspan="6" style="text-align:center; padding:20px; background:#f9f9f9;">
+                        <button class="btn-print" onclick="window.print()">🖨️ CETAK BORANG SARINGAN</button>
+                    </td>
+                </tr>`;
+        } else {
             tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px;">Tiada data untuk dipaparkan.</td></tr>`;
         }
     }
