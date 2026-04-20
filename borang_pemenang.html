@@ -45,6 +45,7 @@
         <hr>
 
         <div id="pemenangSelectors" style="display:none;">
+            <p id="infoAcaraPasukan" style="color:#c0392b; font-weight:bold; display:none;">*Acara Berpasukan: Sila pilih Rumah Sukan sahaja.</p>
             <p>🥇 <strong>Johan:</strong> 
                 <select id="win1" onchange="updateBorang(1)"></select> 
                 Masa/Jarak: <input type="text" id="record1" oninput="syncRecord(1)">
@@ -56,6 +57,10 @@
             <p>🥉 <strong>Ketiga:</strong> 
                 <select id="win3" onchange="updateBorang(3)"></select> 
                 Masa/Jarak: <input type="text" id="record3" oninput="syncRecord(3)">
+            </p>
+            <p>🎖️ <strong>Keempat:</strong> 
+                <select id="win4" onchange="updateBorang(4)"></select> 
+                Masa/Jarak: <input type="text" id="record4" oninput="syncRecord(4)">
             </p>
             <button class="btn-save" id="btnSimpan" onclick="simpanDanCetak()">💾 SIMPAN & CETAK</button>
         </div>
@@ -81,7 +86,7 @@
             <tr>
                 <th width="20%">KEDUDUKAN</th>
                 <th width="15%">NO BADAN</th>
-                <th>NAMA PEMENANG</th>
+                <th>NAMA PEMENANG / PASUKAN</th>
                 <th width="15%">RUMAH</th>
                 <th width="20%">KEPUTUSAN</th>
             </tr>
@@ -90,11 +95,12 @@
             <tr class="winner-row"><td>PERTAMA (JOHAN)</td><td id="b_no1"></td><td id="b_nama1"></td><td id="b_rumah1"></td><td id="b_rec1"></td></tr>
             <tr class="winner-row"><td>KEDUA (NAIB JOHAN)</td><td id="b_no2"></td><td id="b_nama2"></td><td id="b_rumah2"></td><td id="b_rec2"></td></tr>
             <tr class="winner-row"><td>KETIGA</td><td id="b_no3"></td><td id="b_nama3"></td><td id="b_rumah3"></td><td id="b_rec3"></td></tr>
+            <tr class="winner-row"><td>KEEMPAT</td><td id="b_no4"></td><td id="b_nama4"></td><td id="b_rumah4"></td><td id="b_rec4"></td></tr>
         </tbody>
     </table>
 
     <div style="margin-top:20px; font-style:italic; border:1px solid #333; padding:10px; font-size: 14px;">
-        <strong>NOTA EMCEE:</strong> Sila umumkan pemenang mengikut turutan tempat ketiga, kedua, dan Johan.
+        <strong>NOTA EMCEE:</strong> Sila umumkan pemenang mengikut turutan tempat keempat, ketiga, kedua, dan Johan.
     </div>
 
     <div class="signature-grid">
@@ -121,7 +127,6 @@
 
     function janaDropdownAcara() {
         const selAcara = document.getElementById('selAcara');
-        // Kumpulkan semua acara unik dari AcaraIndividu dan AcaraBerpasukan
         let senaraiAcara = [];
         dataSemuaAtlet.forEach(a => {
             if (a.AcaraIndividu) a.AcaraIndividu.split(',').forEach(s => senaraiAcara.push(s.trim()));
@@ -150,30 +155,74 @@
             else if(ting == "3") katM = a.Jantina + "2";
             else if(ting == "4" || ting == "5") katM = a.Jantina + "1";
             
-            // Semak kedua-dua kolum (Individu & Berpasukan)
             const padanAcara = (a.AcaraIndividu && a.AcaraIndividu.includes(acara)) || 
                                (a.AcaraBerpasukan && a.AcaraBerpasukan.includes(acara));
             
             return padanAcara && katM == kat;
         });
 
-        [1, 2, 3].forEach(n => {
-            const sel = document.getElementById('win' + n);
-            sel.innerHTML = '<option value="">-- Pilih Nama --</option>';
-            atletTapis.sort((a,b) => a.NamaMurid.localeCompare(b.NamaMurid)).forEach(a => {
-                sel.innerHTML += `<option value="${a.NomborBadan}">${a.NomborBadan} - ${a.NamaMurid} (${a.RumahSukan})</option>`;
+        // Semak sama ada acara adalah berpasukan
+        const namaAcaraLow = acara.toLowerCase();
+        const isAcaraPasukan = namaAcaraLow.includes('4x') || namaAcaraLow.includes('4 x') || namaAcaraLow.includes('tarik tali');
+
+        if(isAcaraPasukan) {
+            document.getElementById('infoAcaraPasukan').style.display = 'block';
+            let rumahTerlibat = [...new Set(atletTapis.map(a => a.RumahSukan))].filter(Boolean);
+            
+            [1, 2, 3, 4].forEach(n => {
+                const sel = document.getElementById('win' + n);
+                sel.innerHTML = '<option value="">-- Pilih Rumah Sukan --</option>';
+                rumahTerlibat.sort().forEach(r => {
+                    sel.innerHTML += `<option value="TEAM_${r}">${r}</option>`;
+                });
             });
+        } else {
+            document.getElementById('infoAcaraPasukan').style.display = 'none';
+            [1, 2, 3, 4].forEach(n => {
+                const sel = document.getElementById('win' + n);
+                sel.innerHTML = '<option value="">-- Pilih Nama --</option>';
+                atletTapis.sort((a,b) => a.NamaMurid.localeCompare(b.NamaMurid)).forEach(a => {
+                    sel.innerHTML += `<option value="${a.NomborBadan}">${a.NomborBadan} - ${a.NamaMurid} (${a.RumahSukan})</option>`;
+                });
+            });
+        }
+        
+        // Reset borang setiap kali tukar kategori/acara
+        [1, 2, 3, 4].forEach(n => {
+            document.getElementById('b_no' + n).innerText = "";
+            document.getElementById('b_nama' + n).innerText = "";
+            document.getElementById('b_rumah' + n).innerText = "";
+            document.getElementById('b_rec' + n).innerText = "";
+            document.getElementById('record' + n).value = "";
         });
+
         document.getElementById('pemenangSelectors').style.display = 'block';
     }
 
     function updateBorang(n) {
-        const noBadan = document.getElementById('win' + n).value;
-        const atlet = atletTapis.find(a => a.NomborBadan == noBadan);
-        if(atlet) {
-            document.getElementById('b_no' + n).innerText = atlet.NomborBadan;
-            document.getElementById('b_nama' + n).innerText = atlet.NamaMurid;
-            document.getElementById('b_rumah' + n).innerText = atlet.RumahSukan;
+        const val = document.getElementById('win' + n).value;
+        if(!val) {
+            document.getElementById('b_no' + n).innerText = "";
+            document.getElementById('b_nama' + n).innerText = "";
+            document.getElementById('b_rumah' + n).innerText = "";
+            return;
+        }
+
+        // Jika Acara Berpasukan
+        if(val.startsWith("TEAM_")) {
+            const rumah = val.replace("TEAM_", "");
+            document.getElementById('b_no' + n).innerText = "-";
+            document.getElementById('b_nama' + n).innerText = "PASUKAN " + rumah.toUpperCase();
+            document.getElementById('b_rumah' + n).innerText = rumah.toUpperCase();
+        } 
+        // Jika Acara Individu
+        else {
+            const atlet = atletTapis.find(a => a.NomborBadan == val);
+            if(atlet) {
+                document.getElementById('b_no' + n).innerText = atlet.NomborBadan;
+                document.getElementById('b_nama' + n).innerText = atlet.NamaMurid;
+                document.getElementById('b_rumah' + n).innerText = atlet.RumahSukan;
+            }
         }
     }
 
@@ -184,15 +233,17 @@
         const kat = document.getElementById('selKat').value;
         const btn = document.getElementById('btnSimpan');
         let pemenang = [];
-        for(let i=1; i<=3; i++) {
+        for(let i=1; i<=4; i++) {
             const no = document.getElementById('b_no' + i).innerText;
-            if(no) {
+            const nama = document.getElementById('b_nama' + i).innerText;
+            if(nama) {
                 pemenang.push({
-                    kedudukan: i, noBadan: no,
-                    nama: document.getElementById('b_nama' + i).innerText,
+                    kedudukan: i, 
+                    noBadan: no,
+                    nama: nama,
                     rumah: document.getElementById('b_rumah' + i).innerText,
                     rekod: document.getElementById('b_rec' + i).innerText,
-                    mata: (i==1 ? 5 : (i==2 ? 3 : 1))
+                    mata: (i==1 ? 5 : (i==2 ? 3 : (i==3 ? 2 : 1))) // Pengiraan mata: 5, 3, 2, 1
                 });
             }
         }
