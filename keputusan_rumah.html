@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Keputusan Keseluruhan Rumah Sukan - SMKTD2</title>
-    <style>
+<style>
         body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 20px; text-align: center; }
         .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
         .admin-panel { background: #fdf2e9; padding: 15px; border-radius: 10px; margin-bottom: 25px; border: 2px dashed #e67e22; }
@@ -24,7 +24,19 @@
         
         input, select { padding: 8px; border-radius: 5px; border: 1px solid #ccc; margin: 5px; }
 
-        @media print { .admin-panel, .btn-print, .btn-back { display: none; } }
+        /* Tetapan Khas Waktu Print */
+        @media print { 
+            .admin-panel, .btn-print, .btn-back { display: none; } 
+            
+            /* Ini kod rahsia untuk paksa browser print warna kotak */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            /* Buang shadow waktu print supaya lebih kemas */
+            .container { box-shadow: none; border: 1px solid #ccc; }
+        }
     </style>
 </head>
 <body>
