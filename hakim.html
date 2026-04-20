@@ -10,20 +10,25 @@
         .btn-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin: 15px 0; }
         button { padding: 10px; cursor: pointer; font-weight: bold; border-radius: 4px; border: none; transition: 0.3s; }
         .btn-event { background: #3498db; color: white; }
-        .btn-final { background: #e74c3c !important; color: white !important; border: 2px solid #c0392b; }
-        .btn-event:hover { opacity: 0.8; }
+        .btn-action { background: #27ae60; color: white; padding: 8px 15px; margin-top: 5px; }
+        .btn-print { background: #2980b9; color: white; padding: 10px 20px; font-size: 15px; }
+        .btn-back { background: #7f8c8d; color: white; padding: 10px 20px; font-size: 15px; margin-left: 10px; }
+        .btn-event:hover, .btn-action:hover, .btn-print:hover { opacity: 0.8; }
         
         table { width: 100%; border-collapse: collapse; margin-top: 20px; table-layout: fixed; }
         th, td { border: 1px solid #000 !important; padding: 8px; text-align: left; word-wrap: break-word; }
         th { background: #eee; font-size: 13px; }
         .cat-header { background: #2c3e50 !important; color: white !important; font-weight: bold; padding: 10px; text-align: center; }
         .team-names { font-size: 11px; color: #444; margin-top: 4px; display: block; }
+        .input-masa { width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 3px; }
         
         @media print {
             .no-print { display: none !important; }
             body { background: white; padding: 0; }
-            .container { border: none; max-width: 100%; }
-            .cat-header { background: #2c3e50 !important; -webkit-print-color-adjust: exact; }
+            .container { border: none; max-width: 100%; padding: 0; }
+            .cat-header { background: #2c3e50 !important; -webkit-print-color-adjust: exact; color: white !important;}
+            th { background: #eee !important; -webkit-print-color-adjust: exact; }
+            .input-masa { border: none; border-bottom: 1px dashed #000; background: transparent; }
         }
     </style>
 </head>
@@ -31,6 +36,7 @@
 
 <div class="no-print">
     <h2>PANEL HAKIM PENCATAT SMKTD2</h2>
+    <p style="font-size: 14px; color: #555;">Pilih acara untuk papar saringan. Isi masa dan klik jana untuk hasilkan senarai akhir.</p>
     <div class="btn-grid" id="eventButtons"></div>
     <p id="status">⏳ Memuat data dari Google Sheets...</p>
 </div>
@@ -46,11 +52,11 @@
         <thead>
             <tr>
                 <th width="5%">No</th>
-                <th width="15%">Lorong (Final)</th>
+                <th width="15%">Lorong</th>
                 <th width="12%">No Badan</th>
                 <th>Nama Atlet / Pasukan (Rumah)</th>
-                <th width="15%">Masa/Jarak</th>
-                <th width="10%">Kedudukan</th>
+                <th width="18%">Catatan Masa</th>
+                <th width="12%">Kedudukan</th>
             </tr>
         </thead>
         <tbody id="atletRows"></tbody>
@@ -61,56 +67,54 @@
     const scriptURL = 'https://script.google.com/macros/s/AKfycbzCl7YHhTZrR9calkir3fKiml518a3TPOLAktvtwffM1nBam2oaRhK1IodfzyVV6nuO/exec';
     let database = [];
     
-    // Senarai acara biasa
-    const acaraList = ["70m", "100m", "400m", "4x100m", "4x400m", "Lompat Jauh", "Lontar Peluru", "Lompat Tinggi"];
-    // Senarai acara yang ada Final
-    const finalEvents = ["100m", "400m"];
-
-    const btnArea = document.getElementById('eventButtons');
+    // Susunan Kategori Yang Ditetapkan
+    const susunanKategori = ["L1", "L2", "L3", "P1", "P2", "P3", "LELAKI TERBUKA", "PEREMPUAN TERBUKA"];
     
-    // Jana butang biasa
-    acaraList.forEach(a => {
-        btnArea.innerHTML += `<button class="btn-event" onclick="generateBorang('${a}', false)">${a}</button>`;
-    });
+    // Senarai acara (Padang telah dibuang)
+    const acaraList = ["70m", "100m", "400m", "4x100m", "4x400m"];
+    
+    const btnArea = document.getElementById('eventButtons');
+    let currentSaringanData = {}; 
+    let currentAcaraObj = "";
 
-    // Jana butang Final (Warna Merah)
-    finalEvents.forEach(a => {
-        btnArea.innerHTML += `<button class="btn-final" onclick="generateBorang('${a}', true)">🚩 FINAL ${a}</button>`;
+    // Jana butang
+    acaraList.forEach(a => {
+        btnArea.innerHTML += `<button class="btn-event" onclick="generateBorang('${a}')">${a}</button>`;
     });
 
     window.onload = () => {
         fetch(scriptURL).then(res => res.json()).then(res => {
             database = res.atlet;
             document.getElementById('status').innerText = '✅ Data Berjaya Ditarik.';
+            setTimeout(() => { document.getElementById('status').style.display = 'none'; }, 2000);
         }).catch(err => {
             document.getElementById('status').innerText = '❌ Gagal hubungi Google Sheets.';
         });
     };
 
-    function generateBorang(acara, isFinalOnly) {
+    function generateBorang(acara) {
+        currentAcaraObj = acara;
         document.getElementById('eventTitle').innerText = acara.toUpperCase();
-        document.getElementById('finalLabel').innerText = isFinalOnly ? "(AKHIR)" : "";
+        document.getElementById('finalLabel').innerText = "(SARINGAN)";
         
+        currentSaringanData = {}; // Reset data sementara
         const tbody = document.getElementById('atletRows');
         tbody.innerHTML = '';
 
         let isTeamEvent = acara.includes("4x");
         
-        // TAPIS DATA
+        // Tapis acara
         let filtered = database.filter(a => {
-            const matchAcara = (a.AcaraIndividu.includes(acara) || a.AcaraBerpasukan.includes(acara));
-            if (isFinalOnly) {
-                // Cari tanda (F) dalam Nombor Badan
-                return matchAcara && a.NomborBadan.toString().toUpperCase().includes("(F)");
-            }
-            return matchAcara;
+            return (a.AcaraIndividu && a.AcaraIndividu.includes(acara)) || 
+                   (a.AcaraBerpasukan && a.AcaraBerpasukan.includes(acara));
         });
 
         if (filtered.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px;">Tiada data ditemui untuk kategori ini.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px;">Tiada data ditemui.</td></tr>`;
             return;
         }
 
+        // Kumpulkan ikut Kategori
         let kategoriMap = {};
         filtered.forEach(a => {
             let kat = "";
@@ -122,6 +126,7 @@
                 else if (ting == "3") kat = a.Jantina + "2";
                 else if (ting == "4" || ting == "5") kat = a.Jantina + "1";
             }
+            
             if (!kategoriMap[kat]) kategoriMap[kat] = isTeamEvent ? {} : [];
             
             if (isTeamEvent) {
@@ -132,31 +137,128 @@
             }
         });
 
-        for (let kat in kategoriMap) {
+        let adaData = false;
+
+        // Render ikut susunan ketat
+        susunanKategori.forEach(kat => {
+            if (!kategoriMap[kat] || (Array.isArray(kategoriMap[kat]) && kategoriMap[kat].length === 0)) return;
+            adaData = true;
+            
             tbody.innerHTML += `<tr><td colspan="6" class="cat-header">KATEGORI: ${kat}</td></tr>`;
+            
             let list = isTeamEvent ? Object.keys(kategoriMap[kat]) : kategoriMap[kat];
+            currentSaringanData[kat] = []; // Sedia array untuk simpan rujukan input masa
 
             list.forEach((item, i) => {
-                // Untuk final, biasanya 8 orang sahaja. Lorong 1-8.
                 let lane = (i % 8) + 1;
                 let heat = Math.ceil((i + 1) / 8);
-                
-                let labelLorong = isFinalOnly ? `LORONG ${lane}` : `S${heat}-L${lane}`;
+                let labelLorong = `S${heat}-L${lane}`;
                 
                 let namaDisplay = isTeamEvent ? 
-                    `<strong>${item.toUpperCase()}</strong><span class="team-names">Pelari: ${kategoriMap[kat][item].join(", ")}</span>` : 
+                    `<strong>PASUKAN ${item.toUpperCase()}</strong><span class="team-names">Pelari: ${kategoriMap[kat][item].join(", ")}</span>` : 
                     `${item.NamaMurid} (${item.Kelas} - ${item.RumahSukan})`;
                 
+                let noBadanDisplay = isTeamEvent ? '-' : item.NomborBadan;
+                
+                // Simpan maklumat untuk proses final nanti
+                currentSaringanData[kat].push({
+                    namaDisplay: namaDisplay,
+                    noBadan: noBadanDisplay
+                });
+
                 tbody.innerHTML += `
                     <tr>
                         <td>${i + 1}</td>
-                        <td style="color:${isFinalOnly ? 'blue' : 'red'}; font-weight:bold">${labelLorong}</td>
-                        <td style="text-align:center">${isTeamEvent ? '-' : item.NomborBadan}</td>
+                        <td style="color:red; font-weight:bold">${labelLorong}</td>
+                        <td style="text-align:center">${noBadanDisplay}</td>
                         <td>${namaDisplay}</td>
-                        <td></td><td></td>
+                        <td>
+                            <input type="text" class="input-masa no-print" id="masa_${kat}_${i}" placeholder="Cth: 12.5 atau 1:02.3">
+                        </td>
+                        <td></td>
                     </tr>`;
             });
+
+            // Butang Proses Final untuk kategori ini
+            tbody.innerHTML += `
+                <tr class="no-print">
+                    <td colspan="6" style="text-align:center; background:#ecf0f1; padding:15px;">
+                        <button class="btn-action" onclick="janaFinalTop8('${kat}')">🏁 JANA SENARAI AKHIR (TOP 8) - ${kat}</button>
+                    </td>
+                </tr>`;
+        });
+
+        if (!adaData) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px;">Tiada data untuk dipaparkan.</td></tr>`;
         }
+    }
+
+    // Fungsi Tukar Masa (Saringan) ke Saat untuk pengiraan (Sorting)
+    function janaFinalTop8(kat) {
+        let senaraiAtlet = currentSaringanData[kat];
+        let senaraiLayak = [];
+
+        senaraiAtlet.forEach((atlet, i) => {
+            let inputMasa = document.getElementById(`masa_${kat}_${i}`).value.trim();
+            if (inputMasa !== "") {
+                let masaSaat = 0;
+                // Jika tulis format 1:05.2 (Minit:Saat)
+                if (inputMasa.includes(':')) {
+                    let parts = inputMasa.split(':');
+                    masaSaat = (parseFloat(parts[0]) * 60) + parseFloat(parts[1]);
+                } else {
+                    // Jika format saat sahaja (cth: 12.5)
+                    masaSaat = parseFloat(inputMasa);
+                }
+
+                if (!isNaN(masaSaat)) {
+                    senaraiLayak.push({
+                        atlet: atlet,
+                        masaAsal: inputMasa,
+                        masaSaat: masaSaat
+                    });
+                }
+            }
+        });
+
+        if (senaraiLayak.length === 0) {
+            alert("Sila masukkan catatan masa sekurang-kurangnya untuk seorang atlet.");
+            return;
+        }
+
+        // Susun masa terpantas (nilai paling kecil ke besar)
+        senaraiLayak.sort((a, b) => a.masaSaat - b.masaSaat);
+
+        // Ambil top 8
+        let top8 = senaraiLayak.slice(0, 8);
+
+        // Bina Jadual Baru (Peringkat Akhir)
+        document.getElementById('finalLabel').innerText = `(AKHIR - ${kat})`;
+        const tbody = document.getElementById('atletRows');
+        
+        tbody.innerHTML = `<tr><td colspan="6" class="cat-header">KATEGORI: ${kat} (PERINGKAT AKHIR)</td></tr>`;
+        
+        top8.forEach((item, i) => {
+            let lane = i + 1; // Lorong 1 hingga 8
+            tbody.innerHTML += `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td style="color:blue; font-weight:bold">LORONG ${lane}</td>
+                    <td style="text-align:center">${item.atlet.noBadan}</td>
+                    <td>${item.atlet.namaDisplay}</td>
+                    <td style="font-size:12px; color:#555;">(Kelayakan: ${item.masaAsal}s)<br><br>Masa Akhir: ...................</td>
+                    <td></td>
+                </tr>`;
+        });
+
+        // Butang Cetak & Kembali
+        tbody.innerHTML += `
+            <tr class="no-print">
+                <td colspan="6" style="text-align:center; padding:20px; background:#f9f9f9;">
+                    <button class="btn-print" onclick="window.print()">🖨️ CETAK SENARAI AKHIR</button>
+                    <button class="btn-back" onclick="generateBorang('${currentAcaraObj}')">🔙 KEMBALI KE SARINGAN</button>
+                </td>
+            </tr>`;
     }
 </script>
 </body>
