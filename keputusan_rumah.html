@@ -54,15 +54,14 @@
 </div>
 
 <script>
-    // 1. GANTIKAN DENGAN URL WEB APP ANDA DARI APPS SCRIPT
+    // 1. URL WEB APP ANDA DARI APPS SCRIPT (Cikgu punya dah betul)
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwGH2gRQ4oEezXSyGHVJ62zjj-ZMbI1H1GROYRgZSWz1xMxOI8ae3ATW_PYmZCDU4IY/exec";
     
-    // 2. CSV URL (Pastikan GID betul untuk tab Keputusan)
-    const CSV_URL = "https://docs.google.com/spreadsheets/d/1S53rBZn5NUMks5xnQLbPryseCUGuKE_YVecNKRWQy3Y/edit?gid=62180236#gid=62180236";
+    // 2. CSV URL DATA UTAMA (Lajur G=Rumah, I=Mata) - Telah dibaiki format export
+    const CSV_URL = "https://docs.google.com/spreadsheets/d/1S53rBZn5NUMks5xnQLbPryseCUGuKE_YVecNKRWQy3Y/export?format=csv&gid=62180236";
     
-    // 3. GID UNTUK MARKAH AKHIR (Sila semak di browser apabila klik tab Markah_Akhir)
-    // Jika cikgu belum tahu GID tab baru, sistem akan guna CSV_URL di atas dulu.
-    const CSV_BONUS_URL = "https://docs.google.com/spreadsheets/d/1S53rBZn5NUMks5xnQLbPryseCUGuKE_YVecNKRWQy3Y/edit?gid=1996086125#gid=1996086125";
+    // 3. CSV URL MARKAH AKHIR BONUS - Telah dibaiki format export
+    const CSV_BONUS_URL = "https://docs.google.com/spreadsheets/d/1S53rBZn5NUMks5xnQLbPryseCUGuKE_YVecNKRWQy3Y/export?format=csv&gid=1996086125";
 
     async function simpanKeSheet() {
         let rumah = document.getElementById("pilihRumah").value;
@@ -81,9 +80,9 @@
                     "markah": parseInt(markah)
                 })
             });
-            msg.innerText = "✅ Berjaya disimpan! Kedudukan akan dikemas kini.";
+            msg.innerText = "✅ Berjaya disimpan!";
             document.getElementById("inputMarkah").value = "";
-            fetchScores(); // Refresh paparan
+            fetchScores(); 
         } catch (e) {
             msg.innerText = "❌ Gagal simpan.";
         }
@@ -91,38 +90,63 @@
 
     async function fetchScores() {
         try {
-            // Ambil data dari CSV utama
             const res = await fetch(CSV_URL);
             const text = await res.text();
-            const rows = text.split('\n').slice(1);
+            
+            // Baca format dengan kebal (buang ralat spacing/newline)
+            const rows = text.split(/\r?\n/).slice(1); 
             
             let skor = {"BELATUK":0, "KENYALANG":0, "HELANG":0, "MERAK":0, "JENTAYU":0};
 
+            // PROSES MARKAH UTAMA
             rows.forEach(row => {
-                let cols = row.split(',');
+                if(!row.trim()) return;
+                
+                // Pisahkan lajur CSV dengan lebih bijak
+                let cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                
+                // Pastikan ada sekurang-kurangnya sampai lajur I (index 8)
                 if(cols.length > 8) {
-                    let r = cols[6] ? cols[6].toUpperCase().trim() : "";
-                    let m = parseInt(cols[8]) || 0;
-                    for(let k in skor) { if(r.includes(k)) skor[k] += m; }
+                    // Buang tanda " " jika wujud (Punca masalah Markah 0)
+                    let r = cols[6] ? cols[6].replace(/["']/g, '').toUpperCase().trim() : "";
+                    let m = cols[8] ? parseInt(cols[8].replace(/["']/g, '').trim()) : 0;
+                    
+                    if (!isNaN(m)) {
+                        for(let k in skor) { 
+                            if(r.includes(k)) skor[k] += m; 
+                        }
+                    }
                 }
             });
 
-            // Ambil markah bonus (Jika GID Markah_Akhir sudah dimasukkan)
+            // PROSES MARKAH BONUS
             try {
-                const resB = await fetch(1996086125);
+                const resB = await fetch(CSV_BONUS_URL);
                 const textB = await resB.text();
-                textB.split('\n').slice(1).forEach(row => {
-                    let c = row.split(',');
-                    let r = c[0] ? c[0].toUpperCase().trim() : "";
-                    let m = parseInt(c[1]) || 0;
-                    if(skor[r] !== undefined) skor[r] += m;
-                });
-            } catch(e) {}
+                
+                // Elak proses jika GID belum ditukar (ia akan return kod HTML)
+                if(!textB.toLowerCase().includes("<html")) { 
+                    textB.split(/\r?\n/).slice(1).forEach(row => {
+                        if(!row.trim()) return;
+                        let c = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                        if(c.length >= 2) {
+                            let r = c[0] ? c[0].replace(/["']/g, '').toUpperCase().trim() : "";
+                            let m = c[1] ? parseInt(c[1].replace(/["']/g, '').trim()) : 0;
+                            if(skor[r] !== undefined && !isNaN(m)) skor[r] += m;
+                        }
+                    });
+                }
+            } catch(e) { console.log("Markah bonus belum sedia diakses"); }
 
+            // Susun dan paparkan kedudukan
             let results = Object.keys(skor).map(k => ({nama: k, mata: skor[k]}));
             results.sort((a,b) => b.mata - a.mata);
             display(results);
-        } catch(e) { console.log(e); }
+
+        } catch(e) { 
+            console.error(e); 
+            document.getElementById('loading').innerText = "❌ Ralat menyambung ke pangkalan data.";
+        }
     }
 
     function display(data) {
@@ -130,13 +154,13 @@
         let html = "";
         data.forEach((item, i) => {
             let cls = `house-${item.nama.toLowerCase()}`;
-            html += `<div class="rank-item ${cls}">#${i+1} | ${item.nama} | ${item.mata} Mata</div>`;
+            html += `<div class="rank-item ${cls}">#${i+1} &nbsp;|&nbsp; ${item.nama} &nbsp;|&nbsp; ${item.mata} Mata</div>`;
         });
         document.getElementById('rankingList').innerHTML = html;
     }
 
     fetchScores();
-    setInterval(fetchScores, 30000); // Auto-refresh 30 saat
+    setInterval(fetchScores, 30000); 
 </script>
 </body>
 </html>
