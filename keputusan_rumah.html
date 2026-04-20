@@ -13,12 +13,13 @@
         .ranking-list { margin-top: 30px; }
         .rank-item { display: flex; align-items: center; justify-content: center; padding: 20px; margin-bottom: 15px; border-radius: 10px; color: white; font-weight: bold; font-size: 22px; transition: 0.3s; }
         
-        /* Warna Rumah Sukan (Boleh tambah/ubah ikut kesesuaian) */
-        .house-merah { background: #e74c3c; } 
-        .house-biru { background: #3498db; } 
-        .house-kuning { background: #f1c40f; color: #2c3e50; } 
-        .house-hijau { background: #27ae60; } 
-        .house-default { background: #34495e; } /* Warna kelabu gelap jika sistem tak cam nama rumah */
+        /* Warna Rumah Sukan SMKTD2 */
+        .house-helang { background: #e74c3c; } /* Merah */
+        .house-merak { background: #3498db; } /* Biru */
+        .house-jentayu { background: #f1c40f; color: #2c3e50; } /* Kuning */
+        .house-belatuk { background: #27ae60; } /* Hijau */
+        .house-kenyalang { background: #e67e22; } /* Oren */
+        .house-default { background: #34495e; } /* Kelabu gelap jika tiada padanan */
 
         .medal { font-size: 28px; margin-left: 15px; }
         .btn-back { display: inline-block; margin-top: 30px; padding: 10px 20px; background: #34495e; color: white; text-decoration: none; border-radius: 5px; }
@@ -31,9 +32,9 @@
     <img src="lencana.jpg" alt="Lencana" style="width: 80px;">
     <h1>KEDUDUKAN RUMAH SUKAN</h1>
     <p style="margin: 0;">KEJOHANAN OLAHRAGA SMKTD2 2026</p>
-    <span class="refresh-tag">● Live Update</span>
+    <span class="refresh-tag">● Live Update Markah Terkumpul</span>
 
-    <div id="loading">Memuat turun markah terkini...</div>
+    <div id="loading">Memuat turun & mengira markah terkini...</div>
     <div id="rankingList" class="ranking-list"></div>
 
     <a href="index.html" class="btn-back">Kembali ke Dashboard</a>
@@ -47,37 +48,49 @@
 
     // ---------------------------------------------------------
     // TETAPAN LAJUR (COLUMN) GOOGLE SHEET
-    // 0 = Lajur A, 1 = Lajur B, 2 = Lajur C, 3 = Lajur D
-    // Ubah nombor di bawah ikut kedudukan sebenar di Sheet anda
+    // Lajur A = 0, B = 1, C = 2, D = 3, E = 4, F = 5, G = 6, H = 7, I = 8
     // ---------------------------------------------------------
-    const LAJUR_NAMA_RUMAH = 1; // Contoh: 1 bermaksud Lajur B
-    const LAJUR_MARKAH = 2;     // Contoh: 2 bermaksud Lajur C
+    const LAJUR_NAMA_RUMAH = 6; // Mengambil data dari Lajur G (RUMAH SUKAN)
+    const LAJUR_MARKAH = 8;     // Mengambil data dari Lajur I (MATA)
 
     async function fetchScores() {
         try {
             const response = await fetch(csvURL);
             const data = await response.text();
             
-            const rows = data.split('\n');
-            let results = [];
+            // Baca data sebaris demi sebaris
+            // Guna split regex ini untuk abaikan koma yang mungkin ada dalam "quote"
+            const rows = data.split(/\r?\n/);
+            
+            let rekodTerkumpul = {}; // Objek untuk simpan jumlah markah
 
-            // Mula dari baris 1 untuk abaikan tajuk (Header)
+            // Mula dari baris 1 (Abaikan baris 0 kerana ia adalah header)
             for (let i = 1; i < rows.length; i++) {
                 let row = rows[i].trim();
                 if (row === "") continue;
 
-                // Pisahkan data menggunakan koma
+                // Pisahkan lajur mengikut koma (standard CSV)
                 let cols = row.split(',');
                 
-                // Pastikan lajur wujud sebelum proses
                 if (cols.length > Math.max(LAJUR_NAMA_RUMAH, LAJUR_MARKAH)) {
+                    // Buang tanda quote (") dan bersihkan ejaan
                     let namaRumah = cols[LAJUR_NAMA_RUMAH] ? cols[LAJUR_NAMA_RUMAH].replace(/["']/g, '').trim().toUpperCase() : "";
-                    let mataRumah = cols[LAJUR_MARKAH] ? parseInt(cols[LAJUR_MARKAH].replace(/["']/g, '').trim()) : 0;
+                    let mata = cols[LAJUR_MARKAH] ? parseInt(cols[LAJUR_MARKAH].replace(/["']/g, '').trim()) : 0;
                     
-                    if (namaRumah !== "" && !isNaN(mataRumah)) {
-                        results.push({ nama: namaRumah, mata: mataRumah });
+                    if (namaRumah !== "" && !isNaN(mata)) {
+                        // FUNGSI AUTO-SUM: Campurkan markah untuk rumah yang sama
+                        if (!rekodTerkumpul[namaRumah]) {
+                            rekodTerkumpul[namaRumah] = 0;
+                        }
+                        rekodTerkumpul[namaRumah] += mata;
                     }
                 }
+            }
+
+            // Tukar objek rekodTerkumpul menjadi format Array supaya boleh disusun (sort)
+            let results = [];
+            for (let rumah in rekodTerkumpul) {
+                results.push({ nama: rumah, mata: rekodTerkumpul[rumah] });
             }
 
             // Susun: Markah tertinggi di atas
@@ -86,7 +99,7 @@
 
         } catch (error) {
             document.getElementById('loading').innerText = "❌ Gagal memuat data. Pastikan Google Sheet dikongsi 'Anyone with the link'.";
-            console.error(error);
+            console.error("Ralat Fetching:", error);
         }
     }
 
@@ -96,28 +109,29 @@
         list.innerHTML = '';
 
         if (data.length === 0) {
-            list.innerHTML = "<p>Tiada data dijumpai dalam rekod. Sila semak tetapan Lajur (Column).</p>";
+            list.innerHTML = "<p>Tiada rekod pemenang ditemui di dalam pangkalan data.</p>";
             return;
         }
 
         data.forEach((item, index) => {
-            let houseClass = "house-default"; // Default color
+            let houseClass = "house-default";
             let medal = "";
             let tempatLabel = "";
             
-            // Kenal pasti warna berdasarkan nama rumah (Boleh ubah/tambah nama di sini)
-            if(item.nama.includes("SYAHBANDAR") || item.nama.includes("MERAH") || item.nama.includes("RAJAWALI") || item.nama.includes("MARIKH")) houseClass = "house-merah";
-            else if(item.nama.includes("LAKSAMANA") || item.nama.includes("BIRU") || item.nama.includes("TIUNG") || item.nama.includes("NEPTUN")) houseClass = "house-biru";
-            else if(item.nama.includes("TEMENGGUNG") || item.nama.includes("KUNING") || item.nama.includes("BELATUK") || item.nama.includes("ZUHAL")) houseClass = "house-kuning";
-            else if(item.nama.includes("BENDAHARA") || item.nama.includes("HIJAU") || item.nama.includes("SERINDIT") || item.nama.includes("BUMI")) houseClass = "house-hijau";
+            // Pengesanan warna ikut nama rumah yang tepat
+            if(item.nama.includes("HELANG")) houseClass = "house-helang";
+            else if(item.nama.includes("MERAK")) houseClass = "house-merak";
+            else if(item.nama.includes("JENTAYU")) houseClass = "house-jentayu";
+            else if(item.nama.includes("BELATUK")) houseClass = "house-belatuk";
+            else if(item.nama.includes("KENYALANG")) houseClass = "house-kenyalang";
 
-            // Set Label Tempat & Medal
+            // Tetapkan Label Kedudukan
             if(index === 0) { tempatLabel = "Tempat Pertama"; medal = "🥇"; }
             else if(index === 1) { tempatLabel = "Tempat Kedua"; medal = "🥈"; }
             else if(index === 2) { tempatLabel = "Tempat Ketiga"; medal = "🥉"; }
-            else { tempatLabel = `Tempat Ke-${index + 1}`; }
+            else { tempatLabel = `Tempat Ke-${index + 1}`; medal = "🎖️"; }
 
-            // Output format: Tempat pertama | Belatuk | Markah 463
+            // Papar mengikut format: Tempat pertama | Belatuk | Markah 463
             list.innerHTML += `
                 <div class="rank-item ${houseClass}">
                     ${tempatLabel} &nbsp;|&nbsp; ${item.nama} &nbsp;|&nbsp; Markah ${item.mata} ${medal}
@@ -126,8 +140,10 @@
         });
     }
 
+    // Panggil kali pertama apabila dibuka
     fetchScores();
-    setInterval(fetchScores, 60000); // Refresh setiap 60 saat
+    // Refresh secara automatik setiap 15 saat supaya lebih pantas dikemas kini
+    setInterval(fetchScores, 15000); 
 </script>
 
 </body>
