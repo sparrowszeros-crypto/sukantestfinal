@@ -7,154 +7,136 @@
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 20px; text-align: center; }
         .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
-        h1 { color: #2c3e50; margin-bottom: 5px; }
-        .refresh-tag { font-size: 12px; color: #27ae60; margin-bottom: 20px; display: block; }
+        .admin-panel { background: #fdf2e9; padding: 15px; border-radius: 10px; margin-bottom: 25px; border: 2px dashed #e67e22; }
+        .ranking-list { margin-top: 20px; }
+        .rank-item { display: flex; align-items: center; justify-content: center; padding: 18px; margin-bottom: 12px; border-radius: 10px; color: white; font-weight: bold; font-size: 20px; }
         
-        .ranking-list { margin-top: 30px; }
-        .rank-item { display: flex; align-items: center; justify-content: center; padding: 20px; margin-bottom: 15px; border-radius: 10px; color: white; font-weight: bold; font-size: 22px; transition: 0.3s; border: 2px solid transparent; }
-        
-        /* Warna Rumah Sukan SMKTD2 */
-        .house-merak { background: #e74c3c !important; color: white !important; }
-        .house-belatuk { background: #3498db !important; color: white !important; }
+        /* Warna Rumah */
+        .house-merak { background: #e74c3c !important; }
+        .house-belatuk { background: #3498db !important; }
         .house-kenyalang { background: #f1c40f !important; color: #2c3e50 !important; }
-        .house-helang { background: #27ae60 !important; color: white !important; }
-        .house-jentayu { background: #e67e22 !important; color: white !important; }
+        .house-helang { background: #27ae60 !important; }
+        .house-jentayu { background: #e67e22 !important; }
 
-        /* Butang */
-        .action-buttons { margin-top: 30px; display: flex; gap: 10px; justify-content: center; }
-        .btn { padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; cursor: pointer; border: none; font-size: 16px; }
-        .btn-back { background: #34495e; color: white; }
-        .btn-print { background: #2980b9; color: white; }
-        .btn-print:hover { background: #1f6391; }
+        .btn { padding: 10px 15px; border-radius: 5px; cursor: pointer; border: none; font-weight: bold; }
+        .btn-save { background: #27ae60; color: white; }
+        .btn-print { background: #2980b9; color: white; margin-top: 20px; }
+        
+        input, select { padding: 8px; border-radius: 5px; border: 1px solid #ccc; margin: 5px; }
 
-        #loading { padding: 50px; font-weight: bold; color: #7f8c8d; }
-
-        /* FORMAT CETAK (PRINT) */
-        @media print {
-            body { background: white; padding: 0; }
-            .container { box-shadow: none; max-width: 100%; width: 100%; padding: 0; }
-            .action-buttons, .refresh-tag, .btn-back { display: none !important; }
-            .rank-item { border: 1px solid #ccc; color: black !important; background: white !important; margin-bottom: 10px; }
-            h1 { font-size: 24pt; }
-        }
+        @media print { .admin-panel, .btn-print, .btn-back { display: none; } }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <img src="lencana.jpg" alt="Lencana" style="width: 80px;">
     <h1>KEDUDUKAN RUMAH SUKAN</h1>
-    <p style="margin: 0;">KEJOHANAN OLAHRAGA SMKTD2 2026</p>
-    <span class="refresh-tag">● Live Update + Markah Tambahan</span>
+    <p>KEJOHANAN OLAHRAGA SMKTD2</p>
 
-    <div id="loading">Memuat turun & mengira markah...</div>
+    <div class="admin-panel">
+        <h3 style="margin-top:0">Tambah Markah Bonus (Simpan ke Sheet)</h3>
+        <select id="pilihRumah">
+            <option value="BELATUK">BELATUK (Biru)</option>
+            <option value="KENYALANG">KENYALANG (Kuning)</option>
+            <option value="HELANG">HELANG (Hijau)</option>
+            <option value="MERAK">MERAK (Merah)</option>
+            <option value="JENTAYU">JENTAYU (Jingga)</option>
+        </select>
+        <input type="number" id="inputMarkah" placeholder="Mata">
+        <button class="btn btn-save" onclick="simpanKeSheet()">💾 Simpan</button>
+        <p id="msg" style="font-size:12px; color:blue;"></p>
+    </div>
+
+    <div id="loading">Memuatkan markah terkini...</div>
     <div id="rankingList" class="ranking-list"></div>
 
-    <div class="action-buttons">
-        <a href="index.html" class="btn btn-back">Kembali ke Dashboard</a>
-        <button onclick="window.print()" class="btn btn-print">🖨️ Cetak Keputusan (Untuk Emcee)</button>
-    </div>
+    <button class="btn btn-print" onclick="window.print()">🖨️ Cetak Untuk Emcee</button>
 </div>
 
 <script>
-    // 1. DATA GOOGLE SHEET
-    const sheetID = '1S53rBZn5NUMks5xnQLbPryseCUGuKE_YVecNKRWQy3Y';
-    const gid = '62180236';
-    const csvURL = `https://docs.google.com/spreadsheets/d/${sheetID}/export?format=csv&gid=${gid}`;
+    // 1. GANTIKAN DENGAN URL WEB APP ANDA DARI APPS SCRIPT
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwGH2gRQ4oEezXSyGHVJ62zjj-ZMbI1H1GROYRgZSWz1xMxOI8ae3ATW_PYmZCDU4IY/exec";
+    
+    // 2. CSV URL (Pastikan GID betul untuk tab Keputusan)
+    const CSV_URL = "https://docs.google.com/spreadsheets/d/1S53rBZn5NUMks5xnQLbPryseCUGuKE_YVecNKRWQy3Y/edit?gid=62180236#gid=62180236";
+    
+    // 3. GID UNTUK MARKAH AKHIR (Sila semak di browser apabila klik tab Markah_Akhir)
+    // Jika cikgu belum tahu GID tab baru, sistem akan guna CSV_URL di atas dulu.
+    const CSV_BONUS_URL = "https://docs.google.com/spreadsheets/d/1S53rBZn5NUMks5xnQLbPryseCUGuKE_YVecNKRWQy3Y/edit?gid=1996086125#gid=1996086125";
 
-    // 2. TETAPAN LAJUR (G = 6, I = 8)
-    const LAJUR_NAMA_RUMAH = 6;
-    const LAJUR_MARKAH = 8;
+    async function simpanKeSheet() {
+        let rumah = document.getElementById("pilihRumah").value;
+        let markah = document.getElementById("inputMarkah").value;
+        let msg = document.getElementById("msg");
 
-    // 3. BAHAGIAN MARKAH TAMBAHAN (Cikgu-cikgu lain boleh edit di sini)
-    // Masukkan markah terkumpul bagi setiap kategori di bawah:
-    const MARKAH_TAMBAHAN = {
-        "BELATUK": 50,    // Contoh: Markah Sukantara + Khemah
-        "KENYALANG": 40, 
-        "HELANG": 35, 
-        "MERAK": 60, 
-        "JENTAYU": 45
-    };
+        if(!markah) return alert("Isi markah!");
+        msg.innerText = "⏳ Sedang menyimpan...";
 
-    const SENARAI_RUMAH_SAH = ["BELATUK", "KENYALANG", "HELANG", "MERAK", "JENTAYU"];
-
-    async function fetchScores() {
         try {
-            const response = await fetch(csvURL);
-            const data = await response.text();
-            const rows = data.split(/\r?\n/);
-            
-            // Masukkan markah tambahan sebagai markah permulaan (Base Score)
-            let rekodTerkumpul = {
-                "BELATUK": MARKAH_TAMBAHAN["BELATUK"] || 0,
-                "KENYALANG": MARKAH_TAMBAHAN["KENYALANG"] || 0,
-                "HELANG": MARKAH_TAMBAHAN["HELANG"] || 0,
-                "MERAK": MARKAH_TAMBAHAN["MERAK"] || 0,
-                "JENTAYU": MARKAH_TAMBAHAN["JENTAYU"] || 0
-            };
-
-            for (let i = 1; i < rows.length; i++) {
-                let row = rows[i].trim();
-                if (row === "") continue;
-                let cols = row.split(',');
-                
-                if (cols.length > Math.max(LAJUR_NAMA_RUMAH, LAJUR_MARKAH)) {
-                    let namaRumahMentah = cols[LAJUR_NAMA_RUMAH] ? cols[LAJUR_NAMA_RUMAH].replace(/["']/g, '').trim().toUpperCase() : "";
-                    let mata = cols[LAJUR_MARKAH] ? parseInt(cols[LAJUR_MARKAH].replace(/["']/g, '').trim()) : 0;
-                    
-                    let rumahSah = SENARAI_RUMAH_SAH.find(rumah => namaRumahMentah.includes(rumah));
-                    if (rumahSah && !isNaN(mata)) {
-                        rekodTerkumpul[rumahSah] += mata;
-                    }
-                }
-            }
-
-            let results = [];
-            for (let rumah in rekodTerkumpul) {
-                results.push({ nama: rumah, mata: rekodTerkumpul[rumah] });
-            }
-
-            results.sort((a, b) => b.mata - a.mata);
-            displayRanking(results);
-
-        } catch (error) {
-            document.getElementById('loading').innerText = "❌ Ralat data.";
-            console.error(error);
+            await fetch(WEB_APP_URL, {
+                method: "POST",
+                body: JSON.stringify({
+                    "jenis": "bonus",
+                    "rumah": rumah,
+                    "markah": parseInt(markah)
+                })
+            });
+            msg.innerText = "✅ Berjaya disimpan! Kedudukan akan dikemas kini.";
+            document.getElementById("inputMarkah").value = "";
+            fetchScores(); // Refresh paparan
+        } catch (e) {
+            msg.innerText = "❌ Gagal simpan.";
         }
     }
 
-    function displayRanking(data) {
-        const list = document.getElementById('rankingList');
-        document.getElementById('loading').style.display = 'none';
-        list.innerHTML = '';
-
-        data.forEach((item, index) => {
-            let houseClass = "";
-            let medal = "";
-            let tempatLabel = "";
+    async function fetchScores() {
+        try {
+            // Ambil data dari CSV utama
+            const res = await fetch(CSV_URL);
+            const text = await res.text();
+            const rows = text.split('\n').slice(1);
             
-            if(item.nama === "MERAK") houseClass = "house-merak";
-            else if(item.nama === "BELATUK") houseClass = "house-belatuk";
-            else if(item.nama === "KENYALANG") houseClass = "house-kenyalang";
-            else if(item.nama === "HELANG") houseClass = "house-helang";
-            else if(item.nama === "JENTAYU") houseClass = "house-jentayu";
+            let skor = {"BELATUK":0, "KENYALANG":0, "HELANG":0, "MERAK":0, "JENTAYU":0};
 
-            if(index === 0) { tempatLabel = "TEMPAT PERTAMA"; medal = "🥇"; }
-            else if(index === 1) { tempatLabel = "TEMPAT KEDUA"; medal = "🥈"; }
-            else if(index === 2) { tempatLabel = "TEMPAT KETIGA"; medal = "🥉"; }
-            else { tempatLabel = `TEMPAT KE-${index + 1}`; medal = "🎖️"; }
+            rows.forEach(row => {
+                let cols = row.split(',');
+                if(cols.length > 8) {
+                    let r = cols[6] ? cols[6].toUpperCase().trim() : "";
+                    let m = parseInt(cols[8]) || 0;
+                    for(let k in skor) { if(r.includes(k)) skor[k] += m; }
+                }
+            });
 
-            list.innerHTML += `
-                <div class="rank-item ${houseClass}">
-                    ${tempatLabel} &nbsp;|&nbsp; ${item.nama} &nbsp;|&nbsp; JUMLAH: ${item.mata} ${medal}
-                </div>
-            `;
+            // Ambil markah bonus (Jika GID Markah_Akhir sudah dimasukkan)
+            try {
+                const resB = await fetch(1996086125);
+                const textB = await resB.text();
+                textB.split('\n').slice(1).forEach(row => {
+                    let c = row.split(',');
+                    let r = c[0] ? c[0].toUpperCase().trim() : "";
+                    let m = parseInt(c[1]) || 0;
+                    if(skor[r] !== undefined) skor[r] += m;
+                });
+            } catch(e) {}
+
+            let results = Object.keys(skor).map(k => ({nama: k, mata: skor[k]}));
+            results.sort((a,b) => b.mata - a.mata);
+            display(results);
+        } catch(e) { console.log(e); }
+    }
+
+    function display(data) {
+        document.getElementById('loading').style.display='none';
+        let html = "";
+        data.forEach((item, i) => {
+            let cls = `house-${item.nama.toLowerCase()}`;
+            html += `<div class="rank-item ${cls}">#${i+1} | ${item.nama} | ${item.mata} Mata</div>`;
         });
+        document.getElementById('rankingList').innerHTML = html;
     }
 
     fetchScores();
-    setInterval(fetchScores, 20000); 
+    setInterval(fetchScores, 30000); // Auto-refresh 30 saat
 </script>
-
 </body>
 </html>
