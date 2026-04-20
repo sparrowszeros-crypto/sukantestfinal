@@ -6,27 +6,22 @@
     <title>Keputusan Keseluruhan Rumah Sukan - SMKTD2</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 20px; text-align: center; }
-        .container { max-width: 700px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
         h1 { color: #2c3e50; margin-bottom: 5px; }
         .refresh-tag { font-size: 12px; color: #27ae60; margin-bottom: 20px; display: block; }
         
         .ranking-list { margin-top: 30px; }
-        .rank-item { display: flex; align-items: center; padding: 20px; margin-bottom: 15px; border-radius: 10px; color: white; font-weight: bold; font-size: 20px; transition: 0.3s; }
+        .rank-item { display: flex; align-items: center; justify-content: center; padding: 20px; margin-bottom: 15px; border-radius: 10px; color: white; font-weight: bold; font-size: 22px; transition: 0.3s; }
         
-        /* Warna Rumah */
-        .house-syahbandar { background: #e74c3c; } /* Merah */
-        .house-laksamana { background: #3498db; } /* Biru */
-        .house-temenggung { background: #f1c40f; color: #2c3e50; } /* Kuning */
-        .house-bendahara { background: #27ae60; } /* Hijau */
+        /* Warna Rumah Sukan (Boleh tambah/ubah ikut kesesuaian) */
+        .house-merah { background: #e74c3c; } 
+        .house-biru { background: #3498db; } 
+        .house-kuning { background: #f1c40f; color: #2c3e50; } 
+        .house-hijau { background: #27ae60; } 
+        .house-default { background: #34495e; } /* Warna kelabu gelap jika sistem tak cam nama rumah */
 
-        .rank-number { font-size: 30px; margin-right: 20px; min-width: 40px; }
-        .house-info { flex-grow: 1; text-align: left; }
-        .house-score { font-size: 28px; }
-        
-        .medal { font-size: 24px; margin-left: 10px; }
-        
+        .medal { font-size: 28px; margin-left: 15px; }
         .btn-back { display: inline-block; margin-top: 30px; padding: 10px 20px; background: #34495e; color: white; text-decoration: none; border-radius: 5px; }
-        
         #loading { padding: 50px; font-weight: bold; color: #7f8c8d; }
     </style>
 </head>
@@ -45,45 +40,50 @@
 </div>
 
 <script>
-    // URL CSV menggunakan GID yang cikgu berikan untuk ketepatan 100%
+    // URL CSV menggunakan GID
     const sheetID = '1S53rBZn5NUMks5xnQLbPryseCUGuKE_YVecNKRWQy3Y';
     const gid = '62180236';
     const csvURL = `https://docs.google.com/spreadsheets/d/${sheetID}/export?format=csv&gid=${gid}`;
+
+    // ---------------------------------------------------------
+    // TETAPAN LAJUR (COLUMN) GOOGLE SHEET
+    // 0 = Lajur A, 1 = Lajur B, 2 = Lajur C, 3 = Lajur D
+    // Ubah nombor di bawah ikut kedudukan sebenar di Sheet anda
+    // ---------------------------------------------------------
+    const LAJUR_NAMA_RUMAH = 1; // Contoh: 1 bermaksud Lajur B
+    const LAJUR_MARKAH = 2;     // Contoh: 2 bermaksud Lajur C
 
     async function fetchScores() {
         try {
             const response = await fetch(csvURL);
             const data = await response.text();
             
-            // Tukar CSV ke Array
             const rows = data.split('\n');
             let results = [];
 
-            // Mula dari baris 1 untuk abaikan baris 0 (Header/Tajuk)
+            // Mula dari baris 1 untuk abaikan tajuk (Header)
             for (let i = 1; i < rows.length; i++) {
                 let row = rows[i].trim();
-                
-                // Abaikan baris jika kosong
                 if (row === "") continue;
 
-                // Pisahkan lajur menggunakan koma
+                // Pisahkan data menggunakan koma
                 let cols = row.split(',');
                 
-                if (cols.length >= 2) {
-                    // Bersihkan tanda " " jika ada
-                    let namaRumah = cols[0].replace(/["']/g, '').trim().toUpperCase();
-                    let mataRumah = parseInt(cols[1].replace(/["']/g, '').trim()) || 0;
+                // Pastikan lajur wujud sebelum proses
+                if (cols.length > Math.max(LAJUR_NAMA_RUMAH, LAJUR_MARKAH)) {
+                    let namaRumah = cols[LAJUR_NAMA_RUMAH] ? cols[LAJUR_NAMA_RUMAH].replace(/["']/g, '').trim().toUpperCase() : "";
+                    let mataRumah = cols[LAJUR_MARKAH] ? parseInt(cols[LAJUR_MARKAH].replace(/["']/g, '').trim()) : 0;
                     
-                    if (namaRumah !== "") {
+                    if (namaRumah !== "" && !isNaN(mataRumah)) {
                         results.push({ nama: namaRumah, mata: mataRumah });
                     }
                 }
             }
 
-            // SORT: Markah tertinggi di atas
+            // Susun: Markah tertinggi di atas
             results.sort((a, b) => b.mata - a.mata);
-
             displayRanking(results);
+
         } catch (error) {
             document.getElementById('loading').innerText = "❌ Gagal memuat data. Pastikan Google Sheet dikongsi 'Anyone with the link'.";
             console.error(error);
@@ -96,43 +96,38 @@
         list.innerHTML = '';
 
         if (data.length === 0) {
-            list.innerHTML = "<p>Tiada data dijumpai dalam rekod.</p>";
+            list.innerHTML = "<p>Tiada data dijumpai dalam rekod. Sila semak tetapan Lajur (Column).</p>";
             return;
         }
 
         data.forEach((item, index) => {
-            let houseClass = "";
+            let houseClass = "house-default"; // Default color
             let medal = "";
+            let tempatLabel = "";
             
-            // Set warna ikut nama rumah
-            if(item.nama.includes("SYAHBANDAR")) houseClass = "house-syahbandar";
-            else if(item.nama.includes("LAKSAMANA")) houseClass = "house-laksamana";
-            else if(item.nama.includes("TEMENGGUNG")) houseClass = "house-temenggung";
-            else if(item.nama.includes("BENDAHARA")) houseClass = "house-bendahara";
-            else houseClass = "house-laksamana"; // Warna default jika nama berbeza sikit
+            // Kenal pasti warna berdasarkan nama rumah (Boleh ubah/tambah nama di sini)
+            if(item.nama.includes("SYAHBANDAR") || item.nama.includes("MERAH") || item.nama.includes("RAJAWALI") || item.nama.includes("MARIKH")) houseClass = "house-merah";
+            else if(item.nama.includes("LAKSAMANA") || item.nama.includes("BIRU") || item.nama.includes("TIUNG") || item.nama.includes("NEPTUN")) houseClass = "house-biru";
+            else if(item.nama.includes("TEMENGGUNG") || item.nama.includes("KUNING") || item.nama.includes("BELATUK") || item.nama.includes("ZUHAL")) houseClass = "house-kuning";
+            else if(item.nama.includes("BENDAHARA") || item.nama.includes("HIJAU") || item.nama.includes("SERINDIT") || item.nama.includes("BUMI")) houseClass = "house-hijau";
 
-            // Set medal untuk Top 3
-            if(index === 0) medal = "🥇";
-            else if(index === 1) medal = "🥈";
-            else if(index === 2) medal = "🥉";
+            // Set Label Tempat & Medal
+            if(index === 0) { tempatLabel = "Tempat Pertama"; medal = "🥇"; }
+            else if(index === 1) { tempatLabel = "Tempat Kedua"; medal = "🥈"; }
+            else if(index === 2) { tempatLabel = "Tempat Ketiga"; medal = "🥉"; }
+            else { tempatLabel = `Tempat Ke-${index + 1}`; }
 
+            // Output format: Tempat pertama | Belatuk | Markah 463
             list.innerHTML += `
                 <div class="rank-item ${houseClass}">
-                    <div class="rank-number">${index + 1}</div>
-                    <div class="house-info">
-                        ${item.nama} ${medal}
-                    </div>
-                    <div class="house-score">${item.mata}</div>
+                    ${tempatLabel} &nbsp;|&nbsp; ${item.nama} &nbsp;|&nbsp; Markah ${item.mata} ${medal}
                 </div>
             `;
         });
     }
 
-    // Panggil fungsi sewaktu buka halaman
     fetchScores();
-    
-    // Auto refresh setiap 1 minit (60000 milisaat)
-    setInterval(fetchScores, 60000);
+    setInterval(fetchScores, 60000); // Refresh setiap 60 saat
 </script>
 
 </body>
